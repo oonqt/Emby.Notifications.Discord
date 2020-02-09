@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Notifications;

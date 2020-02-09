@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Services;
 using Emby.Notifications.Discord.Configuration;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Emby.Notifications.Discord.Api
