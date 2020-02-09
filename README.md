@@ -1,1 +1,0 @@
-# Emby notifications for discord
