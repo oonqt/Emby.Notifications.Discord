@@ -5,9 +5,18 @@
 </head>
 <body>
     <div data-role="page" class="page type-interior pluginConfigurationPage discordConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
-
         <div data-role="content">
             <div class="content-primary">
+                <div class="verticalSection">
+                    <div class="sectionTitleContainer">
+                        <h2 class="sectionTitle">Discord Notifications</h2>
+                        <a is="emby-linkbutton" class="raised raised-mini" style="margin-left: 2em;" target="_blank" href="https://github.com/oonqt/Emby.Notifications.Discord/blob/master/README.md">
+                            <i class="md-icon button-icon button-icon-left secondaryText">help</i>
+                            <span>Help</span>
+                        </a>
+                    </div>
+                </div>
+
                 <form class="discordConfigurationForm">
                     <div style="height:0; overflow: hidden;"><input type="text" name="fakeusernameremembered" tabindex="-1" /><input type="password" name="fakepasswordremembered" tabindex="-1" /></div>
                     <div class="selectContainer">
@@ -21,10 +30,19 @@
                         <input is="emby-input" type="text" id="txtDiscordWebhookUri" required="required" label="* Discord Webhook URL:" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="txtAvatarUrl" label="Discord Avatar URL:" />
+                        <input is="emby-input" type="text" id="txtAvatarUrl" label="Avatar URL:" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="txtUsername" label="Discord Webhook Username:" />
+                        <input is="emby-input" type="text" id="txtUsername" label="Webhook Username:" />
+                    </div>
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="chkMentionEveryone" />
+                        <span>Mention Everyone:</span>
+                    </label>
+                    <div class="inputContainer">
+                        <label for="embedColor">Embed Color:</label>
+                        <input type="color" id="embedColor" is="emby-input" style="height: 2.2em;" />
+                        <input type="text" is="emby-input" id="txtEmbedColor" />
                     </div>
                     <div>
                         <button is="emby-button" type="button" class="raised button-cancel block" id="testNotification">
@@ -44,6 +62,7 @@
             (function () {
 
                 var pluginId = "05C9ED79-5645-4AA2-A161-D4F29E63535C";
+                var defaultEmbedColor = "#53b64c";
 
                 function loadUserConfig(page, userId) {
 
@@ -58,9 +77,12 @@
                         })[0] || {};
 
                         page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
+                        page.querySelector("#chkMentionEveryone").checked = discordConfig.MentionEveryone || false;
                         $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
                         $('#txtUsername', page).val(discordConfig.Username || '');
                         $('#txtAvatarUrl', page).val(discordConfig.AvatarUrl || '');
+                        $('#embedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
+                        $('#txtEmbedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
 
                         Dashboard.hideLoadingMsg();
                     });
@@ -71,8 +93,15 @@
                     var page = this;
 
                     $('#selectUser', page).on('change', function () {
-
                         loadUserConfig(page, this.value);
+                    });
+
+                    $("#embedColor", page).on("change", function () {
+                        $("#txtEmbedColor", page).val(this.value);
+                    });
+
+                    $("#txtEmbedColor", page).on("input", function () {
+                        $("#embedColor", page).val(this.value);
                     });
 
                     $('#testNotification', page).on('click', function (event) {
@@ -151,11 +180,11 @@
                         discordConfig.MediaBrowserUserId = userId;
 
                         discordConfig.Enabled = form.querySelector('#chkEnableDiscord').checked;
+                        discordConfig.MentionEveryone = form.querySelector("#chkMentionEveryone").checked;
                         discordConfig.DiscordWebhookURI = $('#txtDiscordWebhookUri', form).val();
                         discordConfig.Username = $("#txtUsername", form).val();
                         discordConfig.AvatarUrl = $("#txtAvatarUrl", form).val();
-
-                        console.log(discordConfig);
+                        discordConfig.EmbedColor = $("#embedColor", form).val();
 
                         ApiClient.updatePluginConfiguration(pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });

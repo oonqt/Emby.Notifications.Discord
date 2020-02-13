@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.Serialization;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using MediaBrowser.Controller.Configuration;
 
 namespace Emby.Notifications.Discord.Api
 {
@@ -22,12 +23,14 @@ namespace Emby.Notifications.Discord.Api
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
+        private readonly IServerConfigurationManager _serverConfiguration;
         private readonly IJsonSerializer _jsonSerializer;
 
-        public ServerApiEndpoints(ILogManager logManager, IJsonSerializer jsonSerializer)
+        public ServerApiEndpoints(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
             _logger = logManager.GetLogger(GetType().Name);
             _httpClient = new HttpClient();
+            _serverConfiguration = serverConfiguration;
             _jsonSerializer = jsonSerializer;
         }
         private DiscordOptions GetOptions(String userID)
@@ -38,29 +41,15 @@ namespace Emby.Notifications.Discord.Api
 
         public void Post(TestNotification request)
         {
-            var task = PostAsync(request);
+            Task task = PostAsync(request);
             Task.WaitAll(task);
-        }
-
-        public class DiscordEmbed
-        {
-            public int color { get; set; }
-            public string title { get; set; }
-            public string description { get; set; }
-        }
-
-        public class DiscordMessage
-        {
-            public List<DiscordEmbed> embeds { get; set; }
-            public string username { get; set; }
-            public string avatar_url { get; set; }
         }
 
         public async Task PostAsync(TestNotification request)
         {
-            var options = GetOptions(request.UserID);
+            DiscordOptions options = GetOptions(request.UserID);
 
-            var postData = new StringContent(_jsonSerializer.SerializeToString(new DiscordMessage()
+            DiscordMessage discordMessage = new DiscordMessage()
             {
                 avatar_url = options.AvatarUrl,
                 username = options.Username,
@@ -68,18 +57,28 @@ namespace Emby.Notifications.Discord.Api
                 {
                     new DiscordEmbed()
                     {
-                        color = 181818,
-                        description = "That's RIGHT",
-                        title = "HA"
+                        color = int.Parse(options.EmbedColor.Substring(1, 6), System.Globalization.NumberStyles.HexNumber),
+                        description = "This is a test notification from Emby",
+                        title = "It worked!",
+                        footer = new Footer
+                        {
+                            icon_url = options.AvatarUrl,
+                            text = $"From {_serverConfiguration.Configuration.ServerName}"
+                        },
+                        timestamp = DateTime.Now
                     }
                 }
-            }).ToString());
+            };
+
+            if (options.MentionEveryone) discordMessage.content = "@everyone";
+
+            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(discordMessage).ToString());
 
             _logger.Debug("Discord Request to: {0} From: {1}", options.DiscordWebhookURI, request.UserID);
 
             try
             {
-                var RequestMessage = new HttpRequestMessage(HttpMethod.Post, options.DiscordWebhookURI);
+                HttpRequestMessage RequestMessage = new HttpRequestMessage(HttpMethod.Post, options.DiscordWebhookURI);
                 RequestMessage.Content = postData;
                 RequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 

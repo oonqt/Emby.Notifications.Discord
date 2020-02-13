@@ -17,6 +17,8 @@ namespace Emby.Notifications.Discord.Configuration
     public class DiscordOptions
     {
         public Boolean Enabled { get; set; }
+        public Boolean MentionEveryone { get; set; }
+        public String EmbedColor { get; set; }
         public String AvatarUrl { get; set; }
         public String Username { get; set; }
         public String DiscordWebhookURI { get; set; }
