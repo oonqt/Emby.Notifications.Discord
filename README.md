@@ -20,8 +20,9 @@ This overrides the username of the webhook. If you wish to set your username via
 ![username](https://niger.gq/u/d84.png)
 
 #### Mention Everyone
-This gives you the ability to toggle whether you want the whole server to be pinged with an `@everyone` or not 
-* Future version: Choose between `@everyone` and `@here`
+This gives you the ability to choose between 2 mention types, `@here`, `@everyone`, or `None`
+The fundamental difference between `@everyone` and `@here` is `@everyone` will send the mention to everyone regardless of their status, while `@here` will only send the mention to the people who are currently online.
+
 
 ![mention example](https://niger.gq/u/fl8.png)
 
