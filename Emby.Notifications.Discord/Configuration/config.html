@@ -18,7 +18,6 @@
                 </div>
 
                 <form class="discordConfigurationForm">
-                    <div style="height:0; overflow: hidden;"><input type="text" name="fakeusernameremembered" tabindex="-1" /><input type="password" name="fakepasswordremembered" tabindex="-1" /></div>
                     <div class="selectContainer">
                         <select is="emby-select" id="selectUser" label="Configure Discord notifications for:"></select>
                     </div>
@@ -35,10 +34,13 @@
                     <div class="inputContainer">
                         <input is="emby-input" type="text" id="txtUsername" label="Webhook Username:" />
                     </div>
-                    <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkMentionEveryone" />
-                        <span>Mention Everyone:</span>
-                    </label>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="mentionType" label="Mention Type:">
+                            <option value="Everyone">@everyone</option>
+                            <option value="Here">@here</option>
+                            <option value="None">None</option>
+                        </select>
+                    </div>
                     <div class="inputContainer">
                         <label for="embedColor">Embed Color:</label>
                         <input type="color" id="embedColor" is="emby-input" style="height: 2.2em;" />
@@ -77,7 +79,7 @@
                         })[0] || {};
 
                         page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
-                        page.querySelector("#chkMentionEveryone").checked = discordConfig.MentionEveryone || false;
+                        $("#mentionType", page).val(discordConfig.MentionType || "None");
                         $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
                         $('#txtUsername', page).val(discordConfig.Username || '');
                         $('#txtAvatarUrl', page).val(discordConfig.AvatarUrl || '');
@@ -116,24 +118,25 @@
                         };
 
                         ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                            var selectedUser = $("#selectUser").val();
 
-                            if (!config.Options.length) {
+                            var userConfig = config.Options.filter(function (c) {
+                                return c.MediaBrowserUserId === selectedUser;
+                            })[0];
+
+                            if (!userConfig) {
                                 Dashboard.hideLoadingMsg();
                                 require(['alert'], function (alert) {
-                                    alert("Please configure and save at least one notification account.");
+                                    alert("Please configure notifications for this user first.");
                                 });
                             }
 
-                            config.Options.map(function (c) {
-
-                                ApiClient.ajax({
-                                    type: "POST",
-                                    url: ApiClient.getUrl("Notification/Discord/Test/" + c.MediaBrowserUserId)
-
-                                }).then(function () {
-                                    Dashboard.hideLoadingMsg();
-                                }, onError);
-                            });
+                            ApiClient.ajax({
+                                type: "POST",
+                                url: ApiClient.getUrl("Notification/Discord/Test/" + userConfig.MediaBrowserUserId)
+                            }).then(function () {
+                                Dashboard.hideLoadingMsg();
+                            }, onError);
                         });
                     });
 
@@ -180,7 +183,7 @@
                         discordConfig.MediaBrowserUserId = userId;
 
                         discordConfig.Enabled = form.querySelector('#chkEnableDiscord').checked;
-                        discordConfig.MentionEveryone = form.querySelector("#chkMentionEveryone").checked;
+                        discordConfig.MentionType = $("#mentionType", form).val();
                         discordConfig.DiscordWebhookURI = $('#txtDiscordWebhookUri', form).val();
                         discordConfig.Username = $("#txtUsername", form).val();
                         discordConfig.AvatarUrl = $("#txtAvatarUrl", form).val();

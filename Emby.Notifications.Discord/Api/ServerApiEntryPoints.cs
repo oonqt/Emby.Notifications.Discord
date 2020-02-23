@@ -70,7 +70,15 @@ namespace Emby.Notifications.Discord.Api
                 }
             };
 
-            if (options.MentionEveryone) discordMessage.content = "@everyone";
+            switch (options.MentionType)
+            {
+                case MentionTypes.Everyone:
+                    discordMessage.content = "@everyone";
+                    break;
+                case MentionTypes.Here:
+                    discordMessage.content = "@here";
+                    break;
+            }
 
             StringContent postData = new StringContent(_jsonSerializer.SerializeToString(discordMessage).ToString());
 
