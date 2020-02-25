@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
+using MediaBrowser.Model.Entities;
 using System.Net.Http.Headers;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Library;
 
 namespace Emby.Notifications.Discord
 {
@@ -82,11 +84,16 @@ namespace Emby.Notifications.Discord
                     break;
             }
 
-            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(discordMessage).ToString());
+            await ExecuteWebhook(discordMessage, options.DiscordWebhookURI);
+        }
+
+        private async Task ExecuteWebhook(DiscordMessage message, string webhookUrl)
+        {
+            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
 
             try
             {
-                HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, options.DiscordWebhookURI);
+                HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, webhookUrl);
                 req.Content = postData;
                 req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 

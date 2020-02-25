@@ -80,17 +80,20 @@ namespace Emby.Notifications.Discord.Api
                     break;
             }
 
-            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(discordMessage).ToString());
+            await ExecuteWebhook(discordMessage, options.DiscordWebhookURI);
+        }
 
-            _logger.Debug("Discord Request to: {0} From: {1}", options.DiscordWebhookURI, request.UserID);
+        private async Task ExecuteWebhook(DiscordMessage message, string webhookUrl)
+        {
+            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
 
             try
             {
-                HttpRequestMessage RequestMessage = new HttpRequestMessage(HttpMethod.Post, options.DiscordWebhookURI);
-                RequestMessage.Content = postData;
-                RequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, webhookUrl);
+                req.Content = postData;
+                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                await _httpClient.SendAsync(RequestMessage).ConfigureAwait(false);
+                await _httpClient.SendAsync(req).ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
