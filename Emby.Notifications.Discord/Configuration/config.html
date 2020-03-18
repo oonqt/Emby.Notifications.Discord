@@ -110,11 +110,39 @@
 
                         Dashboard.showLoadingMsg();
 
-                        var onError = function () {
-                            require(['alert'], function (alert) {
-                                alert("There was an error sending the test notification. Please check your notification settings and try again.");
-                                Dashboard.hideLoadingMsg();
-                            });
+                        var onError = function (data) {
+                            if (data.status === 400) {
+                                require(["alert"], function (alert) {
+                                    alert("The Discord Webhook URL appears to be invalid. Please try again with a valid URL");
+                                });
+                            } else if (data.status === 500) {
+                                require([
+                                    "dialogHelper",
+                                    "emby-button",
+                                    "paper-icon-button-light",
+                                    "emby-input",
+                                    "formDialogStyle",
+                                    "flexStyles",
+                                    "emby-linkbutton"
+                                ], function (dialogHelper) {
+                                        var dialogOptions = { removeOnClose: true, scrollY: !1, size: "small" }
+                                        var dialog = dialogHelper.createDialog(dialogOptions);
+                                        dialog.classList.add("formDialog"),
+                                            dialog.classList.add("justify-content-center"),
+                                            dialog.style.height = "150px",
+                                            dialog.classList.add("align-items-center"),
+                                            dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">Uh oh... Something unexpected happened. Please start a post on the <a class="button-link" is="emby-linkbutton" href="https://emby.media/community/index.php?/topic/82370-new-plugin-discord-notifications" target="_blank">forum thread</a> containing your server log and/or browser console output</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">Got It</button></div>';
+
+                                        dialogHelper.open(dialog);
+
+                                        // im too lazy to reverse engineer the dashboard code to find how to properly attach buttons, this works for now lol
+                                        document.getElementById("dialogSubmitBtn-3434321").addEventListener("click", function () {
+                                            dialogHelper.close(dialog);
+                                        });
+                                });
+                            }
+
+                            Dashboard.hideLoadingMsg();
                         };
 
                         ApiClient.getPluginConfiguration(pluginId).then(function (config) {
