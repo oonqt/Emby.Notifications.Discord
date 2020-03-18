@@ -7,7 +7,6 @@ using Emby.Notifications.Discord.Configuration;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Serialization;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using MediaBrowser.Controller.Configuration;
 
 namespace Emby.Notifications.Discord.Api
@@ -80,25 +79,7 @@ namespace Emby.Notifications.Discord.Api
                     break;
             }
 
-            await ExecuteWebhook(discordMessage, options.DiscordWebhookURI);
-        }
-
-        private async Task ExecuteWebhook(DiscordMessage message, string webhookUrl)
-        {
-            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
-
-            try
-            {
-                HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, webhookUrl);
-                req.Content = postData;
-                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-                await _httpClient.SendAsync(req).ConfigureAwait(false);
-            }
-            catch (HttpRequestException e)
-            {
-                _logger.Error("Failed to make request to Discord: {0}", e);
-            }
-        }
+            await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+        } 
     }
 }
