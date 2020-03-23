@@ -7,19 +7,24 @@
 #### Discord Webhook URL (REQUIRED)
 This is the incoming messages URL that the plugin uses to send notifications to. You can set this up via the channel or server settings in a Discord server. 
 
-![creating webhooks](https://niger.gq/u/avt.gif)
+![creating webhooks](https://i.memester.xyz/u/avt.gif)
 
 #### Avatar URL (OPTIONAL)
 This overrides the avatar of the webhook. This can be a link to anything as long as it returns *just* an image. This overrides the image set in the Discord webhook settings, if you wish to use the avatar you set in the Discord configuration, leave this blank.
 
-![avatar url](https://niger.gq/u/3f4.png)
+![avatar url](https://i.memester.xyz/u/3f4.png)
 
 #### Webhook Username (OPTIONAL)
 This overrides the username of the webhook. If you wish to set your username via Discord, you can set it in the webhook settings. The default webhook username provided via Discord is "Spidey bot".
 
-![username](https://niger.gq/u/d84.png)
+![username](https://i.memester.xyz/u/d84.png)
 
-#### Mention Everyone
+#### Server name override
+Checking this option gives you the ability to replace any occurance of "Emby Server" in your notifications with the name of your server (Applies to notification text as well as the notification footer).
+
+![Servernameoverride](https://i.memester.xyz/u/7n1.png)
+
+#### Mention Type
 This gives you the ability to choose between 2 mention types, `@here`, `@everyone`, or `None`
 The fundamental difference between `@everyone` and `@here` is `@everyone` will send the mention to everyone regardless of their status, while `@here` will only send the mention to the people who are currently online.
 
