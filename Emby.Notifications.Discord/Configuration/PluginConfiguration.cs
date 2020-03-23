@@ -24,6 +24,7 @@ namespace Emby.Notifications.Discord.Configuration
     public class DiscordOptions
     {
         public Boolean Enabled { get; set; }
+        public Boolean ServerNameOverride { get; set; }
         public MentionTypes MentionType { get; set; }
         public String EmbedColor { get; set; }
         public String AvatarUrl { get; set; }

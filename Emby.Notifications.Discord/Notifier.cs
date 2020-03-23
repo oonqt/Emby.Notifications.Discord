@@ -53,6 +53,20 @@ namespace Emby.Notifications.Discord
         {
             DiscordOptions options = GetOptions(request.User);
 
+            string serverName = _serverConfiguration.Configuration.ServerName;
+            string footerText;
+            string requestName;
+
+            if(options.ServerNameOverride)
+            {
+                footerText = $"From {serverName}";
+                requestName = request.Name.Replace("Emby Server", serverName);
+            } else
+            {
+                requestName = request.Name;
+                footerText = "From Emby Server";
+            }
+
             DiscordMessage discordMessage = new DiscordMessage
             {
                 avatar_url = options.AvatarUrl,
@@ -62,12 +76,12 @@ namespace Emby.Notifications.Discord
                     new DiscordEmbed()
                     {
                         color = int.Parse(options.EmbedColor.Substring(1, 6), System.Globalization.NumberStyles.HexNumber),
-                        title = request.Name,
+                        title = requestName,
                         description = request.Description,
                         footer = new Footer
                         {
                             icon_url = options.AvatarUrl,
-                            text = $"From {_serverConfiguration.Configuration.ServerName}"
+                            text = footerText
                         },
                         timestamp = DateTime.Now
                     }
