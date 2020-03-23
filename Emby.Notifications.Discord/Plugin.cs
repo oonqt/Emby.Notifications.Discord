@@ -20,7 +20,7 @@ namespace Emby.Notifications.Discord
 
         public override string Name
         {
-            get { return "Discord Notifications"; }
+            get { return "DiscordNotifications"; }
         }
 
         public IEnumerable<PluginPageInfo> GetPages()
@@ -31,6 +31,11 @@ namespace Emby.Notifications.Discord
                 {
                     Name = Name,
                     EmbeddedResourcePath = GetType().Namespace + ".Configuration.config.html"
+                },
+                new PluginPageInfo
+                {
+                    Name = $"{Name}JS",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.config.js"
                 }
             };
         }

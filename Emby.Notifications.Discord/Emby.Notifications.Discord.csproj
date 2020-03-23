@@ -6,13 +6,23 @@
     <FileVersion>1.0.2.1</FileVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\..\.config\emby-server\plugins</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\..\.config\emby-server\plugins</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="Configuration\config.html" />
     <None Remove="thumb.jpg" />
+    <None Remove="Configuration\config.js" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\config.html" />
+    <EmbeddedResource Include="Configuration\config.js" />
     <EmbeddedResource Include="thumb.jpg" />
   </ItemGroup>
 
@@ -20,8 +30,4 @@
     <PackageReference Include="mediabrowser.server.core" Version="4.0.0.2" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
-  </Target>
 </Project>
