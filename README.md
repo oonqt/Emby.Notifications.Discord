@@ -29,9 +29,9 @@ This gives you the ability to choose between 2 mention types, `@here`, `@everyon
 The fundamental difference between `@everyone` and `@here` is `@everyone` will send the mention to everyone regardless of their status, while `@here` will only send the mention to the people who are currently online.
 
 
-![mention example](https://niger.gq/u/fl8.png)
+![mention example](https://i.memester.xyz/u/fl8.png)
 
 #### Embed Color
 This sets the accent color of the Rich Embed. It can be set via a color picker or by entering a hex value. The default color is green.
 
-![embed accent color](https://niger.gq/u/akd.png)
+![embed accent color](https://i.memester.xyz/u/akd.png)
