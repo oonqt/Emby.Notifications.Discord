@@ -9,7 +9,7 @@
                         <h2 class="sectionTitle">Discord Notifications</h2>
                         <a is="emby-linkbutton" class="raised raised-mini" style="margin-left: 2em;" target="_blank" href="https://github.com/oonqt/Emby.Notifications.Discord/blob/master/README.md">
                             <i class="md-icon button-icon button-icon-left secondaryText">help</i>
-                            <span>Help</span>
+                            <span>Setup Info</span>
                         </a>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                         <input type="text" is="emby-input" id="txtEmbedColor" />
                     </div>
                     <div>
-                        <button is="emby-button" type="button" class="raised button-cancel block" id="testNotification">
+                        <button is="emby-button" type="button" class="raised button-cancel block" id="btnTestNotification">
                             <span>Test Notification</span>
                         </button>
                     </div>
@@ -60,175 +60,11 @@
             </div>
         </div>
 
-        <script type="text/javascript">
-
-            (function () {
-
-                //var pluginId = "05C9ED79-5645-4AA2-A161-D4F29E63535C";
-                //var defaultEmbedColor = "#53b64c";
-
-                //function loadUserConfig(page, userId) {
-
-                //    Dashboard.showLoadingMsg();
-
-                //    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-
-                //        var discordConfig = config.Options.filter(function (c) {
-
-                //            return userId == c.MediaBrowserUserId;
-
-                //        })[0] || {};
-
-                //        page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
-                //        page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || false;
-                //        $("#mentionType", page).val(discordConfig.MentionType || "None");
-                //        $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
-                //        $('#txtUsername', page).val(discordConfig.Username || '');
-                //        $('#txtAvatarUrl', page).val(discordConfig.AvatarUrl || '');
-                //        $('#embedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
-                //        $('#txtEmbedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
-
-                //        Dashboard.hideLoadingMsg();
-                //    });
-                //}
-
-                $('.discordConfigurationPage').on('pageinit', function (event) {
-
-                    var page = this;
-
-                    $('#selectUser', page).on('change', function () {
-                        loadUserConfig(page, this.value);
-                    });
-
-                    $("#embedColor", page).on("change", function () {
-                        $("#txtEmbedColor", page).val(this.value);
-                    });
-
-                    $("#txtEmbedColor", page).on("input", function () {
-                        $("#embedColor", page).val(this.value);
-                    });
-
-                    $('#testNotification', page).on('click', function (event) {
-
-                        Dashboard.showLoadingMsg();
-
-                        var onError = function (data) {
-                            if (data.status === 400) {
-                                require(["alert"], function (alert) {
-                                    alert("The Discord Webhook URL appears to be invalid. Please try again with a valid URL");
-                                });
-                            } else if (data.status === 500) {
-                                require([
-                                    "dialogHelper",
-                                    "emby-button",
-                                    "paper-icon-button-light",
-                                    "emby-input",
-                                    "formDialogStyle",
-                                    "flexStyles",
-                                    "emby-linkbutton"
-                                ], function (dialogHelper) {
-                                        var dialogOptions = { removeOnClose: true, scrollY: !1, size: "small" }
-                                        var dialog = dialogHelper.createDialog(dialogOptions);
-                                        dialog.classList.add("formDialog"),
-                                            dialog.classList.add("justify-content-center"),
-                                            dialog.style.height = "150px",
-                                            dialog.classList.add("align-items-center"),
-                                            dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">Uh oh... Something unexpected happened. Please start a post on the <a class="button-link" is="emby-linkbutton" href="https://emby.media/community/index.php?/topic/82370-new-plugin-discord-notifications" target="_blank">forum thread</a> containing your server log and/or browser console output</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">Got It</button></div>';
-
-                                        dialogHelper.open(dialog);
-
-                                        // im too lazy to reverse engineer the dashboard code to find how to properly attach buttons, this works for now lol
-                                        document.getElementById("dialogSubmitBtn-3434321").addEventListener("click", function () {
-                                            dialogHelper.close(dialog);
-                                        });
-                                });
-                            }
-
-                            Dashboard.hideLoadingMsg();
-                        };
-
-                        ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                            var selectedUser = $("#selectUser").val();
-
-                            var userConfig = config.Options.filter(function (c) {
-                                return c.MediaBrowserUserId === selectedUser;
-                            })[0];
-
-                            if (!userConfig) {
-                                Dashboard.hideLoadingMsg();
-                                require(['alert'], function (alert) {
-                                    alert("Please configure notifications for this user first.");
-                                });
-                            }
-
-                            ApiClient.ajax({
-                                type: "POST",
-                                url: ApiClient.getUrl("Notification/Discord/Test/" + userConfig.MediaBrowserUserId)
-                            }).then(function () {
-                                Dashboard.hideLoadingMsg();
-                            }, onError);
-                        });
-                    });
-
-                }).on('pageshow', function () {
-
-                    Dashboard.showLoadingMsg();
-
-                    var page = this;
-
-                    ApiClient.getUsers().then(function (users) {
-
-                        $('#selectUser', page).html(users.map(function (user) {
-
-                            return '<option value="' + user.Id + '">' + user.Name + '</option>';
-
-                        })).trigger('change');
-
-                    });
-
-                    Dashboard.hideLoadingMsg();
-                });
-
-                $('.discordConfigurationForm').on('submit', function (e) {
-
-                    Dashboard.showLoadingMsg();
-
-                    var form = this;
-
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-
-                        var userId = $('#selectUser', form).val();
-
-                        var discordConfig = config.Options.filter(function (c) {
-
-                            return userId == c.MediaBrowserUserId;
-
-                        })[0];
-
-                        if (!discordConfig) {
-                            discordConfig = {};
-                            config.Options.push(discordConfig);
-                        }
-
-                        discordConfig.MediaBrowserUserId = userId;
-
-                        discordConfig.Enabled = form.querySelector('#chkEnableDiscord').checked;
-                        discordConfig.ServerNameOverride = form.querySelector("#chkEnableDiscord").checked;
-                        discordConfig.MentionType = $("#mentionType", form).val();
-                        discordConfig.DiscordWebhookURI = $('#txtDiscordWebhookUri', form).val();
-                        discordConfig.Username = $("#txtUsername", form).val();
-                        discordConfig.AvatarUrl = $("#txtAvatarUrl", form).val();
-                        discordConfig.EmbedColor = $("#embedColor", form).val();
-
-                        ApiClient.updatePluginConfiguration(pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
-                    });
-
-                    return false;
-                });
-
-            })();
-
-        </script>
+        <style> /* should go in head, but pluginmanager doesnt load the head */
+            .checkboxContainer {
+                max-width: fit-content;
+            }
+        </style>
     </div>
 </body>
 </html>
