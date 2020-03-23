@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
-using MediaBrowser.Model.Entities;
-using System.Net.Http.Headers;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Controller.Library;
+using System.IO;
 
 namespace Emby.Notifications.Discord
 {
@@ -22,20 +23,46 @@ namespace Emby.Notifications.Discord
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly HttpClient _httpClient;
+        private readonly string _mediaRecorderPath;
+        private readonly ILibraryManager _libraryManager;
+        private readonly IFileSystem _fileSystem;
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, IServerApplicationPaths applicationPaths, IFileSystem fileSystem, ILibraryManager libraryManager)
         {
             _logger = logManager.GetLogger(GetType().Name);
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
+            _mediaRecorderPath = Path.Combine(applicationPaths.DataPath, "discord_notifications_recorder.json");
+            _fileSystem = fileSystem;
+            _libraryManager = libraryManager;
             _httpClient = new HttpClient();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Run()
+        {
+            _libraryManager.ItemAdded += ItemAddedHandler;
+        }
+
+        public void ItemAddedHandler(EventHandler<ItemChangeEventArgs> eventArgs)
+        {
+            _logger.Debug("Item added... Saving to DATABASE");
+        }
+
+        public void ItemUpdated()
+        {
+
         }
 
         public bool IsEnabledForUser(User user)
         {
             DiscordOptions options = GetOptions(user);
 
-            return options != null && IsValid(options) && options.Enabled;
+            return options != null && !string.IsNullOrEmpty(options.DiscordWebhookURI) && options.Enabled;
         }
 
         private DiscordOptions GetOptions(User user)
@@ -44,24 +71,23 @@ namespace Emby.Notifications.Discord
                 .FirstOrDefault(i => string.Equals(i.MediaBrowserUserId, user.Id.ToString("N"), StringComparison.OrdinalIgnoreCase));
         }
 
-        public string Name
-        {
-            get { return Plugin.Instance.Name; }
-        }
+        public string Name => Plugin.Instance.Name;
 
         public async Task SendNotification(UserNotification request, CancellationToken cancellationToken)
         {
             DiscordOptions options = GetOptions(request.User);
 
             string serverName = _serverConfiguration.Configuration.ServerName;
+
             string footerText;
             string requestName;
 
-            if(options.ServerNameOverride)
+            if (options.ServerNameOverride)
             {
                 footerText = $"From {serverName}";
                 requestName = request.Name.Replace("Emby Server", serverName);
-            } else
+            }
+            else
             {
                 requestName = request.Name;
                 footerText = "From Emby Server";
@@ -99,11 +125,6 @@ namespace Emby.Notifications.Discord
             }
 
             await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
-        }
-
-        private bool IsValid(DiscordOptions options)
-        {
-            return !string.IsNullOrEmpty(options.DiscordWebhookURI);
         }
     }
 }

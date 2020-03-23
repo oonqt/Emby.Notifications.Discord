@@ -30,9 +30,4 @@
     <PackageReference Include="mediabrowser.server.core" Version="4.0.0.2" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
-    <Exec Command="%AppData%\Emby-Server\system\EmbyServer.exe" />
-  </Target>
 </Project>
