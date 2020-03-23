@@ -48,6 +48,17 @@ namespace Emby.Notifications.Discord.Api
         {
             DiscordOptions options = GetOptions(request.UserID);
 
+            string footerText;
+
+            if (options.ServerNameOverride)
+            {
+                footerText = $"From {_serverConfiguration.Configuration.ServerName}";
+            }
+            else
+            {
+                footerText = "From Emby Server";
+            }
+
             DiscordMessage discordMessage = new DiscordMessage()
             {
                 avatar_url = options.AvatarUrl,
@@ -62,7 +73,7 @@ namespace Emby.Notifications.Discord.Api
                         footer = new Footer
                         {
                             icon_url = options.AvatarUrl,
-                            text = $"From {_serverConfiguration.Configuration.ServerName}"
+                            text = footerText
                         },
                         timestamp = DateTime.Now
                     }
