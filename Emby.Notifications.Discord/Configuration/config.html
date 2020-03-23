@@ -1,10 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
-    <title>PushBullet Notifications</title>
-</head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage discordConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+    <div data-role="page" class="page type-interior pluginConfigurationPage discordConfigurationPage" data-controller="__plugin/DiscordNotificationsJS">
         <div data-role="content">
             <div class="content-primary">
                 <div class="verticalSection">
@@ -34,6 +31,10 @@
                     <div class="inputContainer">
                         <input is="emby-input" type="text" id="txtUsername" label="Webhook Username:" />
                     </div>
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="chkOverrideServerName" />
+                        <span>Replace "Emby Server" with your server name</span>
+                    </label>
                     <div class="selectContainer">
                         <select is="emby-select" id="mentionType" label="Mention Type:">
                             <option value="Everyone">@everyone</option>
@@ -79,6 +80,7 @@
                         })[0] || {};
 
                         page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
+                        page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || false;
                         $("#mentionType", page).val(discordConfig.MentionType || "None");
                         $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
                         $('#txtUsername', page).val(discordConfig.Username || '');
@@ -168,7 +170,7 @@
                         });
                     });
 
-                }).on('pageshow', function (event) {
+                }).on('pageshow', function () {
 
                     Dashboard.showLoadingMsg();
 
@@ -211,6 +213,7 @@
                         discordConfig.MediaBrowserUserId = userId;
 
                         discordConfig.Enabled = form.querySelector('#chkEnableDiscord').checked;
+                        discordConfig.ServerNameOverride = form.querySelector("#chkEnableDiscord").checked;
                         discordConfig.MentionType = $("#mentionType", form).val();
                         discordConfig.DiscordWebhookURI = $('#txtDiscordWebhookUri', form).val();
                         discordConfig.Username = $("#txtUsername", form).val();
