@@ -64,33 +64,33 @@
 
             (function () {
 
-                var pluginId = "05C9ED79-5645-4AA2-A161-D4F29E63535C";
-                var defaultEmbedColor = "#53b64c";
+                //var pluginId = "05C9ED79-5645-4AA2-A161-D4F29E63535C";
+                //var defaultEmbedColor = "#53b64c";
 
-                function loadUserConfig(page, userId) {
+                //function loadUserConfig(page, userId) {
 
-                    Dashboard.showLoadingMsg();
+                //    Dashboard.showLoadingMsg();
 
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                //    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
 
-                        var discordConfig = config.Options.filter(function (c) {
+                //        var discordConfig = config.Options.filter(function (c) {
 
-                            return userId == c.MediaBrowserUserId;
+                //            return userId == c.MediaBrowserUserId;
 
-                        })[0] || {};
+                //        })[0] || {};
 
-                        page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
-                        page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || false;
-                        $("#mentionType", page).val(discordConfig.MentionType || "None");
-                        $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
-                        $('#txtUsername', page).val(discordConfig.Username || '');
-                        $('#txtAvatarUrl', page).val(discordConfig.AvatarUrl || '');
-                        $('#embedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
-                        $('#txtEmbedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
+                //        page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
+                //        page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || false;
+                //        $("#mentionType", page).val(discordConfig.MentionType || "None");
+                //        $('#txtDiscordWebhookUri', page).val(discordConfig.DiscordWebhookURI || '');
+                //        $('#txtUsername', page).val(discordConfig.Username || '');
+                //        $('#txtAvatarUrl', page).val(discordConfig.AvatarUrl || '');
+                //        $('#embedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
+                //        $('#txtEmbedColor', page).val(discordConfig.EmbedColor || defaultEmbedColor);
 
-                        Dashboard.hideLoadingMsg();
-                    });
-                }
+                //        Dashboard.hideLoadingMsg();
+                //    });
+                //}
 
                 $('.discordConfigurationPage').on('pageinit', function (event) {
 
