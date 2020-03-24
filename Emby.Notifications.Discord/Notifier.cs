@@ -23,19 +23,17 @@ namespace Emby.Notifications.Discord
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly HttpClient _httpClient;
-        private readonly string _mediaRecorderPath;
-        private readonly ILibraryManager _libraryManager;
-        private readonly IFileSystem _fileSystem;
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, IServerApplicationPaths applicationPaths, IFileSystem fileSystem, ILibraryManager libraryManager)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
         {
             _logger = logManager.GetLogger(GetType().Name);
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
-            _mediaRecorderPath = Path.Combine(applicationPaths.DataPath, "discord_notifications_recorder.json");
-            _fileSystem = fileSystem;
-            _libraryManager = libraryManager;
             _httpClient = new HttpClient();
+
+            libraryManager.ItemUpdated += ItemUpdateHandler;
+            libraryManager.ItemAdded += ItemAddHandler;
+            _logger.Debug("Register item update/add handlers");
         }
 
         public void Dispose()
@@ -43,19 +41,48 @@ namespace Emby.Notifications.Discord
             throw new NotImplementedException();
         }
 
-        public void Run()
+        public void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
-            _libraryManager.ItemAdded += ItemAddedHandler;
+            switch (changeEvent.UpdateReason)
+            {
+                case ItemUpdateType.MetadataImport:
+                    _logger.Debug("[ADD] Metadata imported for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.MetadataEdit:
+                    _logger.Debug("[ADD] Metadata edited for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.ImageUpdate:
+                    _logger.Debug("[ADD] Image updated for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.MetadataDownload:
+                    _logger.Debug("[ADD] Metadata download for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.None:
+                    _logger.Debug("[ADD] Update for no reason {0}", changeEvent.Item.Name);
+                    break;
+            }
         }
 
-        public void ItemAddedHandler(EventHandler<ItemChangeEventArgs> eventArgs)
+        public void ItemUpdateHandler(object sender, ItemChangeEventArgs changeEvent)
         {
-            _logger.Debug("Item added... Saving to DATABASE");
-        }
-
-        public void ItemUpdated()
-        {
-
+            switch(changeEvent.UpdateReason)
+            {
+                case ItemUpdateType.MetadataImport:
+                    _logger.Debug("[UPDATE] Metadata imported for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.MetadataEdit:
+                    _logger.Debug("[UPDATE] Metadata edited for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.ImageUpdate:
+                    _logger.Debug("[UPDATE] Image updated for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.MetadataDownload:
+                    _logger.Debug("[UPDATE] Metadata download for {0}", changeEvent.Item.Name);
+                    break;
+                case ItemUpdateType.None:
+                    _logger.Debug("[UPDATE] Update for no reason {0}", changeEvent.Item.Name);
+                    break;
+            }
         }
 
         public bool IsEnabledForUser(User user)
