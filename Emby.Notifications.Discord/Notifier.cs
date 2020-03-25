@@ -43,6 +43,8 @@ namespace Emby.Notifications.Discord
 
         public void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
+            _logger.Debug("[ADD]: {0} ", changeEvent.Item.Name);
+
             switch (changeEvent.UpdateReason)
             {
                 case ItemUpdateType.MetadataImport:
@@ -65,6 +67,8 @@ namespace Emby.Notifications.Discord
 
         public void ItemUpdateHandler(object sender, ItemChangeEventArgs changeEvent)
         {
+            _logger.Debug("[CHANGED]: {0}", changeEvent.Item.Name);
+
             switch(changeEvent.UpdateReason)
             {
                 case ItemUpdateType.MetadataImport:
