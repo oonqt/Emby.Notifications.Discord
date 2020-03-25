@@ -21,7 +21,7 @@ namespace Emby.Notifications.Discord
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly HttpClient _httpClient;
 
-        public List<Guid> queuedUpdateCheck;
+        public List<Guid> queuedUpdateCheck = new List<Guid> { };
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
         {
@@ -33,10 +33,22 @@ namespace Emby.Notifications.Discord
             libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
 
-            do {
-                _logger.Debug("Simulate fake media check");
+            Thread metadataUpdateChecker = new Thread(new ThreadStart(CheckForMetadata));
+            metadataUpdateChecker.Start();
+        }
 
-                Thread.Sleep(5000); // we check if metadata has been added every 30 seconds, more than enough
+        public void CheckForMetadata()
+        {
+            do
+            {
+                queuedUpdateCheck.ForEach(itemId =>
+                {
+                    _logger.Debug("{0} queued for recheck", itemId.ToString());
+                });
+
+                _logger.Debug("Simulate shit here i guess");
+
+                Thread.Sleep(5000);
             } while (true);
         }
 

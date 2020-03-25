@@ -24,10 +24,10 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="killall EmbyServer" />
-    <Exec Command="cp &quot;$(TargetPath)&quot; &quot;/Users/rechigo/.config/emby-server/plugins&quot;" />
-    <Exec Command="open /Applications/EmbyServer.app" />
-    <!-- <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
-    <Exec Command="%AppData%\Emby-Server\system\EmbyServer.exe" /> -->
+   <!-- <Exec Command="killall EmbyServer" />
+    <Exec Command="cp &quot;$(TargetPath)&quot; &quot;/Users/rechigo/.config/emby-server/plugins&quot;" /> 
+    <Exec Command="open /Applications/EmbyServer.app" /> -->
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
+    <Exec Command="%AppData%\Emby-Server\system\EmbyServer.exe" />
   </Target>
 </Project>
