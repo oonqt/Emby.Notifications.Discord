@@ -5,15 +5,7 @@
     <AssemblyVersion>1.0.4.2</AssemblyVersion>
     <FileVersion>1.0.4.2</FileVersion>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\..\.config\emby-server\plugins</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\..\.config\emby-server\plugins</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
+  
   <ItemGroup>
     <None Remove="Configuration\config.html" />
     <None Remove="thumb.jpg" />
@@ -32,7 +24,10 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
-    <Exec Command="%AppData%\Emby-Server\system\EmbyServer.exe" />
+    <Exec Command="killall EmbyServer" />
+    <Exec Command="cp &quot;$(TargetPath)&quot; &quot;/Users/rechigo/.config/emby-server/plugins&quot;" />
+    <Exec Command="open /Applications/EmbyServer.app" />
+    <!-- <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
+    <Exec Command="%AppData%\Emby-Server\system\EmbyServer.exe" /> -->
   </Target>
 </Project>
