@@ -10,10 +10,7 @@ using System.Net.Http;
 using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
 using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Controller.Library;
-using System.IO;
 
 namespace Emby.Notifications.Discord
 {
@@ -26,67 +23,18 @@ namespace Emby.Notifications.Discord
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
         {
-            _logger = logManager.GetLogger(GetType().Name);
+            _logger = logManager.GetLogger(GetType().Namespace);
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
             _httpClient = new HttpClient();
 
-            libraryManager.ItemUpdated += ItemUpdateHandler;
             libraryManager.ItemAdded += ItemAddHandler;
-            _logger.Debug("Register item update/add handlers");
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
+            _logger.Debug("Registered ItemAdd handler");
         }
 
         public void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
-            _logger.Debug("[ADD]: {0} ", changeEvent.Item.Name);
-
-            switch (changeEvent.UpdateReason)
-            {
-                case ItemUpdateType.MetadataImport:
-                    _logger.Debug("[ADD] Metadata imported for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.MetadataEdit:
-                    _logger.Debug("[ADD] Metadata edited for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.ImageUpdate:
-                    _logger.Debug("[ADD] Image updated for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.MetadataDownload:
-                    _logger.Debug("[ADD] Metadata download for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.None:
-                    _logger.Debug("[ADD] Update for no reason {0}", changeEvent.Item.Name);
-                    break;
-            }
-        }
-
-        public void ItemUpdateHandler(object sender, ItemChangeEventArgs changeEvent)
-        {
-            _logger.Debug("[CHANGED]: {0}", changeEvent.Item.Name);
-
-            switch(changeEvent.UpdateReason)
-            {
-                case ItemUpdateType.MetadataImport:
-                    _logger.Debug("[UPDATE] Metadata imported for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.MetadataEdit:
-                    _logger.Debug("[UPDATE] Metadata edited for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.ImageUpdate:
-                    _logger.Debug("[UPDATE] Image updated for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.MetadataDownload:
-                    _logger.Debug("[UPDATE] Metadata download for {0}", changeEvent.Item.Name);
-                    break;
-                case ItemUpdateType.None:
-                    _logger.Debug("[UPDATE] Update for no reason {0}", changeEvent.Item.Name);
-                    break;
-            }
+            _logger.Debug("[ADD]: {0} [REASON]: {1} TYPE: {2}", changeEvent.Item.Name, changeEvent.UpdateReason, changeEvent.Item.MediaType);
         }
 
         public bool IsEnabledForUser(User user)

@@ -27,7 +27,7 @@ namespace Emby.Notifications.Discord.Api
 
         public ServerApiEndpoints(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
-            _logger = logManager.GetLogger(GetType().Name);
+            _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
             _serverConfiguration = serverConfiguration;
             _jsonSerializer = jsonSerializer;
