@@ -21,6 +21,8 @@ namespace Emby.Notifications.Discord
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly HttpClient _httpClient;
 
+        public List<Guid> queuedUpdateCheck;
+
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
@@ -30,11 +32,22 @@ namespace Emby.Notifications.Discord
 
             libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
+
+            do {
+                _logger.Debug("Simulate fake media check");
+
+                Thread.Sleep(5000); // we check if metadata has been added every 30 seconds, more than enough
+            } while (true);
         }
 
         public void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
-            _logger.Debug("[ADD]: {0} [REASON]: {1} TYPE: {2}", changeEvent.Item.Name, changeEvent.UpdateReason, changeEvent.Item.MediaType);
+            BaseItem Item = changeEvent.Item;
+
+            // we will probably need to check for more here, im just trying to get it to work for now
+            if(!Item.IsVirtualItem) {
+                queuedUpdateCheck.Add(Item.Id);
+            }
         }
 
         public bool IsEnabledForUser(User user)
