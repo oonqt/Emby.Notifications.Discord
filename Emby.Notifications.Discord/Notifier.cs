@@ -19,6 +19,7 @@ namespace Emby.Notifications.Discord
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IServerConfigurationManager _serverConfiguration;
+        private readonly ILibraryManager _libraryManager;
         private readonly HttpClient _httpClient;
 
         public List<Guid> queuedUpdateCheck = new List<Guid> { };
@@ -26,11 +27,12 @@ namespace Emby.Notifications.Discord
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
+            _httpClient = new HttpClient();
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
-            _httpClient = new HttpClient();
+            _libraryManager = libraryManager;
 
-            libraryManager.ItemAdded += ItemAddHandler;
+            _libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
 
             Thread metadataUpdateChecker = new Thread(new ThreadStart(CheckForMetadata));
@@ -41,12 +43,19 @@ namespace Emby.Notifications.Discord
         {
             do
             {
+                if (queuedUpdateCheck.Count == 0) _logger.Debug("Skipping... No media pending update check");
+
                 queuedUpdateCheck.ForEach(itemId =>
                 {
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
-                });
 
-                _logger.Debug("Simulate shit here i guess");
+                    BaseItem item = _libraryManager.GetItemById(itemId);
+                    Boolean hasMetadata = false;
+
+                    if (item.ProviderIds.Count > 0) hasMetadata = true; // there wouldnt be any external ids if the item didnt have metadata 
+
+                   _logger.Debug("{0} has metadata: {1}", itemId, hasMetadata);
+                });
 
                 Thread.Sleep(5000);
             } while (true);
