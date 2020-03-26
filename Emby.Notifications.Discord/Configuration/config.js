@@ -25,7 +25,7 @@
 
                 page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
                 page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || true;
-                page.querySelector("#chkOverrideMediaAdded").checked = discordCOnfig.MediaAddedOverride || true;
+                page.querySelector("#chkOverrideMediaAdded").checked = discordConfig.MediaAddedOverride || true;
                 page.querySelector("#mentionType").value = discordConfig.MentionType || "None";
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
