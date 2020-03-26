@@ -1,5 +1,7 @@
 # Emby notifications for Discord
 
+### [Forum Thread](https://emby.media/community/index.php?/topic/82370-new-plugin-discord-notifications/)
+
 ### Configuration
 
 ---
