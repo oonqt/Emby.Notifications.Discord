@@ -54,6 +54,13 @@ namespace Emby.Notifications.Discord
                     if (item.ProviderIds.Count > 0)
                     {
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
+
+                        DiscordMessage mediaAddedEmbed = new DiscordMessage
+                        {
+                            content = "hi"
+                        };
+
+                        DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, "", _jsonSerializer, _logger, _httpClient).ConfigureAwait(false);
                     } else
                     {
                         _logger.Debug("{0}[{1}] has no metadata", item.Id, item.Name);
