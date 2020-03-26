@@ -48,7 +48,7 @@
 
                 var discordConfig = config.Options.filter(function (config) {
                     return userId === config.MediaBrowserUserId;
-                });
+                })[0];
 
                 if (!discordConfig) {
                     discordConfig = {};
