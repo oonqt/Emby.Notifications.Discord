@@ -13,6 +13,7 @@ namespace Emby.Notifications.Discord
     {
         public int color { get; set; }
         public string title { get; set; }
+        public string url { get; set; }
         public string description { get; set; }
         public Thumbnail thumbnail { get; set; }
         public List<Field> fields { get; set; }
