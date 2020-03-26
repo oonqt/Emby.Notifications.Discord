@@ -48,7 +48,12 @@
 
                 var discordConfig = config.Options.filter(function (config) {
                     return userId === config.MediaBrowserUserId;
-                })[0] || {};
+                });
+
+                if (!discordConfig) {
+                    discordConfig = {};
+                    config.Options.push(discordConfig);
+                } 
 
                 discordConfig.MediaBrowserUserId = userId;
                 discordConfig.ServerNameOverride = page.querySelector("#chkOverrideServerName").checked;
@@ -58,8 +63,6 @@
                 discordConfig.Username = page.querySelector("#txtUsername").value;
                 discordConfig.AvatarUrl = page.querySelector("#txtAvatarUrl").value;
                 discordConfig.EmbedColor = page.querySelector("#embedColor").value;
-
-                config.Options.push(discordConfig);
 
                 ApiClient.updatePluginConfiguration(pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
             });

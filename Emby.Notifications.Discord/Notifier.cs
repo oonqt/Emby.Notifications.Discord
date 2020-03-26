@@ -50,11 +50,14 @@ namespace Emby.Notifications.Discord
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
 
                     BaseItem item = _libraryManager.GetItemById(itemId);
-                    Boolean hasMetadata = false;
 
-                    if (item.ProviderIds.Count > 0) hasMetadata = true; // there wouldnt be any external ids if the item didnt have metadata 
-
-                   _logger.Debug("{0} has metadata: {1}", itemId, hasMetadata);
+                    if (item.ProviderIds.Count > 0)
+                    {
+                        _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
+                    } else
+                    {
+                        _logger.Debug("{0}[{1}] has no metadata", item.Id, item.Name);
+                    }
                 });
 
                 Thread.Sleep(5000);
