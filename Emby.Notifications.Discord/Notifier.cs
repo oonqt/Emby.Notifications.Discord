@@ -11,6 +11,7 @@ using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 
 namespace Emby.Notifications.Discord
 {
@@ -55,12 +56,63 @@ namespace Emby.Notifications.Discord
                     {
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
 
+                        DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
+
+                        string serverName = options.ServerNameOverride ? _serverConfiguration.Configuration.ServerName : "Emby Server";
+
                         DiscordMessage mediaAddedEmbed = new DiscordMessage
                         {
-                            content = "hi"
+                            embeds = new List<DiscordEmbed>()
+                            {
+                                new DiscordEmbed()
+                                {
+                                    title = $"{item.Name} ({item.ProductionYear}) has been added to {serverName}",
+                                    description = item.Overview,
+                                    fields = new List<Field>(),
+                                    footer = new Footer
+                                    {
+                                        text = $"From {serverName}",
+                                        icon_url = options.AvatarUrl
+                                    },
+                                    timestamp = DateTime.Now
+                                }
+                            },
                         };
 
-                        DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, "", _jsonSerializer, _logger, _httpClient).ConfigureAwait(false);
+                        // image must be primary
+                        if(item.HasImage(ImageType.Primary))
+                        {
+                            mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
+                            {
+                                url = item.GetImagePath(ImageType.Primary)
+                            };
+                        }
+
+                        item.ProviderIds.ToList().ForEach(provider =>
+                        {
+                            Field field = new Field
+                            {
+                                name = "External Details"
+                            };
+
+                            // only adding imdb and tmdb for now until further testing
+                            switch(provider.Key.ToLower())
+                            {
+                                case "imdb":
+                                    field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
+                                    break;
+                                case "tmdb":
+                                    field.value = $"[TMDb](https://www.themoviedb.org/movie/{provider.Value})";
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            mediaAddedEmbed.embeds.First().fields.Add(field);
+                        });
+
+                        DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient).ConfigureAwait(false);
+                        // after sending we want to remove this item from the list so it wont send the noti multiple times
                     } else
                     {
                         _logger.Debug("{0}[{1}] has no metadata", item.Id, item.Name);
