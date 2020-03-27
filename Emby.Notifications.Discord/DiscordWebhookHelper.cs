@@ -67,7 +67,7 @@ namespace Emby.Notifications.Discord
                 HttpResponseMessage response = await _httpClient.SendAsync(req).ConfigureAwait(false);
 
 
-                _logger.Debug("Request to {0} completed with status {1}", req.RequestUri, response.StatusCode);
+                _logger.Debug("Request to {0} completed with status {1} embed object: {2}", req.RequestUri, response.StatusCode, _jsonSerializer.SerializeToString(message));
             }
             catch (HttpRequestException e)
             {
