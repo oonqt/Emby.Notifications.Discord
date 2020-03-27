@@ -28,7 +28,7 @@ namespace Emby.Notifications.Discord
         private readonly HttpClient _httpClient;
 
         public List<Guid> queuedUpdateCheck = new List<Guid> { };
-        //public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; k/v to store attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
+        //public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
         {
