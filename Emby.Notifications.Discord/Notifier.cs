@@ -27,8 +27,7 @@ namespace Emby.Notifications.Discord
         private readonly IServerApplicationHost _applicationHost;
         private readonly HttpClient _httpClient;
 
-        //public List<Guid> queuedUpdateCheck = new List<Guid> { };
-        public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; // k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
+        public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { }; // k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
         {
@@ -58,7 +57,9 @@ namespace Emby.Notifications.Discord
 
                     BaseItem item = _libraryManager.GetItemById(itemId);
 
-                    if (item.ProviderIds.Count > 0)
+                    Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= Constants.MaxRetriesBeforeFallback;
+
+                    if (item.ProviderIds.Count > 0 || localMetadataFallback)
                     {
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
 
@@ -90,7 +91,15 @@ namespace Emby.Notifications.Discord
                             },
                         };
 
-                        if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
+                        if(LibraryType == "Audio")
+                        {
+                            if (!String.IsNullOrEmpty(item.)) mediaAddedEmbed.embeds.First().description = item; 
+                        }
+                        else
+                        {
+                            if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview; 
+                        }
+
                         if (!String.IsNullOrEmpty(sysInfo.WanAddress)) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
                         // populate images causes issues w/ images that are local
@@ -115,44 +124,46 @@ namespace Emby.Notifications.Discord
                         // populate external URLs
                         List<Field> providerFields = new List<Field>();
 
-                        item.ProviderIds.ToList().ForEach(provider =>
+                        if(!localMetadataFallback)
                         {
-                            Field field = new Field
+                            item.ProviderIds.ToList().ForEach(provider =>
                             {
-                                name = "External Details"
-                            };
+                                Field field = new Field
+                                {
+                                    name = "External Details"
+                                };
 
-                            Boolean didPopulate = true;
+                                Boolean didPopulate = true;
 
-                            _logger.Debug("{0} has provider {1} with providerid {2}", itemId, provider.Key, provider.Value);
+                                _logger.Debug("{0} has provider {1} with providerid {2}", itemId, provider.Key, provider.Value);
 
-                            // only adding imdb and tmdb for now until further testing
-                            switch (provider.Key.ToLower())
-                            {
-                                case "imdb":
-                                    field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
-                                    break;
-                                case "tmdb":
-                                    field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
-                                    break;
-                                case "musicbrainztrack":
-                                    field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
-                                    break;
-                                case "musicbrainzalbum":
-                                    field.value = $"[MusicBrainz Album](https://musicbrainz.org/release/{provider.Value})";
-                                    break;
-                                case "theaudiodbalbum":
-                                    field.value = $"[TADb Album](https://theaudiodb.com/album/{provider.Value})";
-                                    break;
-                                default:
-                                    didPopulate = false;
-                                    break;
-                            }
+                                switch (provider.Key.ToLower())
+                                {
+                                    case "imdb":
+                                        field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
+                                        break;
+                                    case "tmdb":
+                                        field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
+                                        break;
+                                    case "musicbrainztrack":
+                                        field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
+                                        break;
+                                    case "musicbrainzalbum":
+                                        field.value = $"[MusicBrainz Album](https://musicbrainz.org/release/{provider.Value})";
+                                        break;
+                                    case "theaudiodbalbum":
+                                        field.value = $"[TADb Album](https://theaudiodb.com/album/{provider.Value})";
+                                        break;
+                                    default:
+                                        didPopulate = false;
+                                        break;
+                                }
 
-                            if(didPopulate == true) providerFields.Add(field);
-                        });
+                                if (didPopulate == true) providerFields.Add(field);
+                            });
 
-                        if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
+                            if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
+                        }
 
                         await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
 
