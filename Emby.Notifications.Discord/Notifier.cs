@@ -13,6 +13,8 @@ using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Configuration;
+using MediaBrowser.Controller;
+using MediaBrowser.Model.System;
 
 namespace Emby.Notifications.Discord
 {
@@ -22,17 +24,19 @@ namespace Emby.Notifications.Discord
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly ILibraryManager _libraryManager;
+        private readonly IServerApplicationHost _applicationHost;
         private readonly HttpClient _httpClient;
 
         public List<Guid> queuedUpdateCheck = new List<Guid> { };
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
             _libraryManager = libraryManager;
+            _applicationHost = applicationHost;
 
             _libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
@@ -45,7 +49,7 @@ namespace Emby.Notifications.Discord
         {
             do
             {
-                queuedUpdateCheck.ForEach(itemId =>
+                queuedUpdateCheck.ForEach(async itemId =>
                 {
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
 
@@ -60,7 +64,6 @@ namespace Emby.Notifications.Discord
 
                         string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
                         string LibraryType = item.GetType().Name;
-
 
                         // build primary info 
                         DiscordMessage mediaAddedEmbed = new DiscordMessage
@@ -82,8 +85,11 @@ namespace Emby.Notifications.Discord
                             },
                         };
 
+                        PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
+
                         if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
-                        if (!String.IsNullOrEmpty(serverConfig.WanDdns)) mediaAddedEmbed.embeds.First().url = $"{(serverConfig.EnableHttps ? "https" : "http")}://{serverConfig.WanDdns}:{(serverConfig.EnableHttps ? serverConfig.PublicHttpsPort : serverConfig.PublicPort)}/web/index.html#!/item?id={itemId}&serverId={}";
+                        if (!String.IsNullOrEmpty(sysInfo.WanAddress)) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
+
 
                         // populate images
                         if (item.HasImage(ImageType.Primary))
@@ -139,7 +145,9 @@ namespace Emby.Notifications.Discord
 
                         if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
 
-                        DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient).ConfigureAwait(false);
+                        await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+
+
                         // after sending we want to remove this item from the list so it wont send the noti multiple times
                     }
                 });
