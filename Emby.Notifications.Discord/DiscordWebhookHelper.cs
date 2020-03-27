@@ -49,6 +49,11 @@ namespace Emby.Notifications.Discord
 
     class DiscordWebhookHelper
     {
+        public static int FormatColorCode(string hexCode)
+        {
+            return int.Parse(hexCode.Substring(1, 6), System.Globalization.NumberStyles.HexNumber);
+        }
+
         public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer, ILogger _logger, HttpClient _httpClient)
         {
             StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
@@ -59,7 +64,10 @@ namespace Emby.Notifications.Discord
                 req.Content = postData;
                 req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                await _httpClient.SendAsync(req).ConfigureAwait(false);
+                HttpResponseMessage response = await _httpClient.SendAsync(req).ConfigureAwait(false);
+
+
+                _logger.Debug("Request to {0} completed with status {1}", req.RequestUri, response.StatusCode);
             }
             catch (HttpRequestException e)
             {

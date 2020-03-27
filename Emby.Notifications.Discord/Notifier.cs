@@ -28,6 +28,7 @@ namespace Emby.Notifications.Discord
         private readonly HttpClient _httpClient;
 
         public List<Guid> queuedUpdateCheck = new List<Guid> { };
+        //public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; k/v to store attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
         {
@@ -60,6 +61,7 @@ namespace Emby.Notifications.Discord
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
 
                         DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
+                        PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
                         ServerConfiguration serverConfig = _serverConfiguration.Configuration;
 
                         string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
@@ -75,6 +77,7 @@ namespace Emby.Notifications.Discord
                                 new DiscordEmbed()
                                 {
                                     title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}",
+                                    color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
                                     footer = new Footer
                                     {
                                         text = $"From {serverName}",
@@ -85,18 +88,26 @@ namespace Emby.Notifications.Discord
                             },
                         };
 
-                        PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
-
                         if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
                         if (!String.IsNullOrEmpty(sysInfo.WanAddress)) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
 
-                        // populate images
+                        // populate images causes issues w/ images that are local
                         if (item.HasImage(ImageType.Primary))
                         {
+                            string imageUrl = "";
+
+                            if(!item.GetImageInfo(ImageType.Primary, 0).IsLocalFile)
+                            {
+                                imageUrl = item.GetImagePath(ImageType.Primary);
+                            } else if (serverConfig.EnableRemoteAccess == true)
+                            {
+                                imageUrl = $"{sysInfo.WanAddress}/emby/Items/{itemId}/Images/Primary";
+                            }
+
                             mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
                             {
-                                url = item.GetImagePath(ImageType.Primary)
+                                url = imageUrl
                             };
                         }
 
@@ -123,9 +134,6 @@ namespace Emby.Notifications.Discord
                                 case "tmdb":
                                     field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
                                     break;
-                                case "trakt":
-                                    field.value = $"[Trakt](https://trakt.tv/{(LibraryType == "Movie" ? "movies" : "shows")}/{provider.Value})";
-                                    break;
                                 case "musicbrainztrack":
                                     field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
                                     break;
@@ -145,8 +153,9 @@ namespace Emby.Notifications.Discord
 
                         if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
 
-                        await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                        _logger.Debug("Requested to discord with: {0}", _jsonSerializer.SerializeToString(mediaAddedEmbed));
 
+                        await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
 
                         // after sending we want to remove this item from the list so it wont send the noti multiple times
                     }
@@ -166,7 +175,7 @@ namespace Emby.Notifications.Discord
             _logger.Debug("{0} has type {1}", Item.Id, LibraryType); // REMOVE WHEN TESTING DONE \\
 
             // we will probably need to check for more here, im just trying to get it to work for now ( && Array.Exists(allowedMovieTypes, t => t == LibraryType) )
-            if (!Item.IsVirtualItem) {
+            if (!Item.IsVirtualItem && Array.Exists(allowedMovieTypes, t => t == LibraryType)) {
                 queuedUpdateCheck.Add(Item.Id);
             }
         }
@@ -214,7 +223,7 @@ namespace Emby.Notifications.Discord
                 {
                     new DiscordEmbed()
                     {
-                        color = int.Parse(options.EmbedColor.Substring(1, 6), System.Globalization.NumberStyles.HexNumber),
+                        color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
                         title = requestName,
                         description = request.Description,
                         footer = new Footer
