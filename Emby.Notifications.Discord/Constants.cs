@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Emby.Notifications.Discord
+﻿namespace Emby.Notifications.Discord
 {
     class Constants
     {

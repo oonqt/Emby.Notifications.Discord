@@ -93,7 +93,9 @@ namespace Emby.Notifications.Discord
 
                         if(LibraryType == "Audio")
                         {
-                            if (!String.IsNullOrEmpty(item.)) mediaAddedEmbed.embeds.First().description = item; 
+                            List<PersonInfo> artists = _libraryManager.GetItemPeople(item);
+
+                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = item; 
                         }
                         else
                         {
