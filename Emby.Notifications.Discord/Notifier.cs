@@ -110,7 +110,9 @@ namespace Emby.Notifications.Discord
                                 }
                             });
 
-                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = $"By {String.Format(", ", artistsFormat)}";
+                            _logger.Debug($"By {artistsFormat.First()}");
+
+                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
                         }
                         else
                         {
