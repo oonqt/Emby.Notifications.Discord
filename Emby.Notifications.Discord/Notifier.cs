@@ -93,9 +93,24 @@ namespace Emby.Notifications.Discord
 
                         if(LibraryType == "Audio")
                         {
-                            List<PersonInfo> artists = _libraryManager.GetItemPeople(item);
+                            List<BaseItem> artists = _libraryManager.GetAllArtists(item);
 
-                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = item; 
+                            IEnumerable<string> artistsFormat = artists.Select(artist =>
+                            {
+                                if(artist.ProviderIds.Count() > 0)
+                                {
+                                    KeyValuePair<string, string> firstProvider = artist.ProviderIds.FirstOrDefault();
+
+                                    string providerUrl = firstProvider.Key == "MusicBrainzArtist" ? $"https://musicbrainz.org/artist/{firstProvider.Value}" : $"https://theaudiodb.com/artist/{firstProvider.Value}";
+
+                                    return $"[{artist.Name}]({providerUrl})";
+                                } else
+                                {
+                                    return artist.Name;
+                                }
+                            });
+
+                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = $"By {String.Format(", ", artistsFormat)}";
                         }
                         else
                         {
