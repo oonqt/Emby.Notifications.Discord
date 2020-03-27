@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Configuration;
 
 namespace Emby.Notifications.Discord
 {
@@ -40,12 +41,10 @@ namespace Emby.Notifications.Discord
             metadataUpdateChecker.Start();
         }
 
-        public void CheckForMetadata()
+        private void CheckForMetadata()
         {
             do
             {
-                if (queuedUpdateCheck.Count == 0) _logger.Debug("Skipping... No media pending update check");
-
                 queuedUpdateCheck.ForEach(itemId =>
                 {
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
@@ -57,18 +56,22 @@ namespace Emby.Notifications.Discord
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
 
                         DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
+                        ServerConfiguration serverConfig = _serverConfiguration.Configuration;
 
-                        string serverName = options.ServerNameOverride ? _serverConfiguration.Configuration.ServerName : "Emby Server";
+                        string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
+                        string LibraryType = item.GetType().Name;
 
+
+                        // build primary info 
                         DiscordMessage mediaAddedEmbed = new DiscordMessage
                         {
+                            username = options.Username,
+                            avatar_url = options.AvatarUrl,
                             embeds = new List<DiscordEmbed>()
                             {
                                 new DiscordEmbed()
                                 {
-                                    title = $"{item.Name} ({item.ProductionYear}) has been added to {serverName}",
-                                    description = item.Overview,
-                                    fields = new List<Field>(),
+                                    title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}",
                                     footer = new Footer
                                     {
                                         text = $"From {serverName}",
@@ -79,14 +82,20 @@ namespace Emby.Notifications.Discord
                             },
                         };
 
-                        // image must be primary
-                        if(item.HasImage(ImageType.Primary))
+                        if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
+                        if (!String.IsNullOrEmpty(serverConfig.WanDdns)) mediaAddedEmbed.embeds.First().url = $"{(serverConfig.EnableHttps ? "https" : "http")}://{serverConfig.WanDdns}:{(serverConfig.EnableHttps ? serverConfig.PublicHttpsPort : serverConfig.PublicPort)}/web/index.html#!/item?id={itemId}&serverId={}";
+
+                        // populate images
+                        if (item.HasImage(ImageType.Primary))
                         {
                             mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
                             {
                                 url = item.GetImagePath(ImageType.Primary)
                             };
                         }
+
+                        // populate external URLs
+                        List<Field> providerFields = new List<Field>();
 
                         item.ProviderIds.ToList().ForEach(provider =>
                         {
@@ -95,27 +104,43 @@ namespace Emby.Notifications.Discord
                                 name = "External Details"
                             };
 
+                            Boolean didPopulate = true;
+
+                            _logger.Debug("{0} has provider {1} with providerid {2}", itemId, provider.Key, provider.Value);
+
                             // only adding imdb and tmdb for now until further testing
-                            switch(provider.Key.ToLower())
+                            switch (provider.Key.ToLower())
                             {
                                 case "imdb":
                                     field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
                                     break;
                                 case "tmdb":
-                                    field.value = $"[TMDb](https://www.themoviedb.org/movie/{provider.Value})";
+                                    field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
+                                    break;
+                                case "trakt":
+                                    field.value = $"[Trakt](https://trakt.tv/{(LibraryType == "Movie" ? "movies" : "shows")}/{provider.Value})";
+                                    break;
+                                case "musicbrainztrack":
+                                    field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
+                                    break;
+                                case "musicbrainzalbum":
+                                    field.value = $"[MusicBrainz Album](https://musicbrainz.org/release/{provider.Value})";
+                                    break;
+                                case "theaudiodbalbum":
+                                    field.value = $"[TADb Album](https://theaudiodb.com/album/{provider.Value})";
                                     break;
                                 default:
+                                    didPopulate = false;
                                     break;
                             }
 
-                            mediaAddedEmbed.embeds.First().fields.Add(field);
+                            if(didPopulate == true) providerFields.Add(field);
                         });
+
+                        if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
 
                         DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient).ConfigureAwait(false);
                         // after sending we want to remove this item from the list so it wont send the noti multiple times
-                    } else
-                    {
-                        _logger.Debug("{0}[{1}] has no metadata", item.Id, item.Name);
                     }
                 });
 
@@ -123,12 +148,17 @@ namespace Emby.Notifications.Discord
             } while (true);
         }
 
-        public void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
+        private static string[] allowedMovieTypes = new string[] { "Movie", "Episode", "Audio" };
+
+        private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
             BaseItem Item = changeEvent.Item;
 
-            // we will probably need to check for more here, im just trying to get it to work for now
-            if(!Item.IsVirtualItem) {
+            string LibraryType = Item.GetType().Name;
+            _logger.Debug("{0} has type {1}", Item.Id, LibraryType); // REMOVE WHEN TESTING DONE \\
+
+            // we will probably need to check for more here, im just trying to get it to work for now ( && Array.Exists(allowedMovieTypes, t => t == LibraryType) )
+            if (!Item.IsVirtualItem) {
                 queuedUpdateCheck.Add(Item.Id);
             }
         }
