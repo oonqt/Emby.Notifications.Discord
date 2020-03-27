@@ -27,8 +27,8 @@ namespace Emby.Notifications.Discord
         private readonly IServerApplicationHost _applicationHost;
         private readonly HttpClient _httpClient;
 
-        public List<Guid> queuedUpdateCheck = new List<Guid> { };
-        //public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
+        //public List<Guid> queuedUpdateCheck = new List<Guid> { };
+        public Dictionary<Guid, Byte> queuedUpdateCheck = new Dictionary<Guid, Byte> { }; // k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
         {
@@ -50,8 +50,10 @@ namespace Emby.Notifications.Discord
         {
             do
             {
-                queuedUpdateCheck.ForEach(async itemId =>
+                queuedUpdateCheck.ToList().ForEach(async updateCheck =>
                 {
+                    Guid itemId = updateCheck.Key;
+
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
 
                     BaseItem item = _libraryManager.GetItemById(itemId);
@@ -90,7 +92,6 @@ namespace Emby.Notifications.Discord
 
                         if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
                         if (!String.IsNullOrEmpty(sysInfo.WanAddress)) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
-
 
                         // populate images causes issues w/ images that are local
                         if (item.HasImage(ImageType.Primary))
@@ -153,19 +154,21 @@ namespace Emby.Notifications.Discord
 
                         if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
 
-                        _logger.Debug("Requested to discord with: {0}", _jsonSerializer.SerializeToString(mediaAddedEmbed));
-
                         await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
 
-                        // after sending we want to remove this item from the list so it wont send the noti multiple times
+                        queuedUpdateCheck.Remove(itemId);
+                    } else
+                    {
+                        queuedUpdateCheck[itemId]++;
+
+                        _logger.Debug("Attempt: {0}", queuedUpdateCheck[itemId]);
                     }
                 });
 
-                Thread.Sleep(5000);
+                Thread.Sleep(Constants.RecheckIntervalMS);
             } while (true);
         }
 
-        private static string[] allowedMovieTypes = new string[] { "Movie", "Episode", "Audio" };
 
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
@@ -174,9 +177,8 @@ namespace Emby.Notifications.Discord
             string LibraryType = Item.GetType().Name;
             _logger.Debug("{0} has type {1}", Item.Id, LibraryType); // REMOVE WHEN TESTING DONE \\
 
-            // we will probably need to check for more here, im just trying to get it to work for now ( && Array.Exists(allowedMovieTypes, t => t == LibraryType) )
-            if (!Item.IsVirtualItem && Array.Exists(allowedMovieTypes, t => t == LibraryType)) {
-                queuedUpdateCheck.Add(Item.Id);
+            if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType)) {
+                queuedUpdateCheck.Add(Item.Id, 0);
             }
         }
 
