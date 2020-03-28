@@ -17,15 +17,12 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Error**
-Attach the most recent error log. This can be found by right clicking the tray application and clicking "Show Logs".
-If you can't access that, you can visit the default log directories for each platform here:
-- Windows: `C:\Users\YOUR_USERNAME\AppData\Roaming\EmbyCord\logs`
-- Mac: `~/Library/Application Support/EmbyCord/logs`
-- Linux: `~/.config/EmbyCord/logs`
+Attach the most recent Emby Server log. These can be found by going to the "Logs" tab of your Emby dashboard.
+If you can't access that, you can manually fetch the log from the filesystem. The log path can be found in the bottom right corner of the dashboard in a card called "Paths"
 
 **Desktop (please complete the following information):**
  - OS: [e.g. Windows]
- - Version [e.g. 1.0.1]
+ - Version [e.g. 1.0.4.3]
 
 **Additional context**
 Add any other context about the problem here.
