@@ -15,6 +15,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Configuration;
 using MediaBrowser.Controller;
 using MediaBrowser.Model.System;
+using MediaBrowser.Model.Globalization;
 
 namespace Emby.Notifications.Discord
 {
@@ -25,17 +26,19 @@ namespace Emby.Notifications.Discord
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly ILibraryManager _libraryManager;
         private readonly IServerApplicationHost _applicationHost;
+        private readonly ILocalizationManager _localizationManager;
         private readonly HttpClient _httpClient;
 
         public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { }; // k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
             _libraryManager = libraryManager;
+            _localizationManager = localizationManager;
             _applicationHost = applicationHost;
 
             _libraryManager.ItemAdded += ItemAddHandler;
@@ -205,6 +208,8 @@ namespace Emby.Notifications.Discord
 
             string LibraryType = Item.GetType().Name;
 
+            _logger.Debug(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", ""));
+
             if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType) && options != null) {
                 queuedUpdateCheck.Add(Item.Id, 0);
             }
@@ -229,27 +234,28 @@ namespace Emby.Notifications.Discord
         {
             DiscordOptions options = GetOptions(request.User);
 
-            string serverName = _serverConfiguration.Configuration.ServerName;
+            if (options.MediaAddedOverride && !request.Name.Contains(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", ""))) {
+                string serverName = _serverConfiguration.Configuration.ServerName;
 
-            string footerText;
-            string requestName;
+                string footerText;
+                string requestName;
 
-            if (options.ServerNameOverride)
-            {
-                footerText = $"From {serverName}";
-                requestName = request.Name.Replace("Emby Server", serverName);
-            }
-            else
-            {
-                requestName = request.Name;
-                footerText = "From Emby Server";
-            }
+                if (options.ServerNameOverride)
+                {
+                    footerText = $"From {serverName}";
+                    requestName = request.Name.Replace("Emby Server", serverName);
+                }
+                else
+                {
+                    requestName = request.Name;
+                    footerText = "From Emby Server";
+                }
 
-            DiscordMessage discordMessage = new DiscordMessage
-            {
-                avatar_url = options.AvatarUrl,
-                username = options.Username,
-                embeds = new List<DiscordEmbed>()
+                DiscordMessage discordMessage = new DiscordMessage
+                {
+                    avatar_url = options.AvatarUrl,
+                    username = options.Username,
+                    embeds = new List<DiscordEmbed>()
                 {
                     new DiscordEmbed()
                     {
@@ -264,19 +270,20 @@ namespace Emby.Notifications.Discord
                         timestamp = DateTime.Now
                     }
                 }
-            };
+                };
 
-            switch (options.MentionType)
-            {
-                case MentionTypes.Everyone:
-                    discordMessage.content = "@everyone";
-                    break;
-                case MentionTypes.Here:
-                    discordMessage.content = "@here";
-                    break;
+                switch (options.MentionType)
+                {
+                    case MentionTypes.Everyone:
+                        discordMessage.content = "@everyone";
+                        break;
+                    case MentionTypes.Here:
+                        discordMessage.content = "@here";
+                        break;
+                }
+
+                await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
             }
-
-            await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
         }
     }
 }
