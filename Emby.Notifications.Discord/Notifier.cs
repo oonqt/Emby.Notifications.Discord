@@ -60,15 +60,19 @@ namespace Emby.Notifications.Discord
 
                     BaseItem item = _libraryManager.GetItemById(itemId);
 
-                    Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= Constants.MaxRetriesBeforeFallback;
+                    LibraryOptions itemLibraryOptions = _libraryManager.GetLibraryOptions(item);
+                    DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
+                    PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
+                    ServerConfiguration serverConfig = _serverConfiguration.Configuration;
+
+                    // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
+                    // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
+                    // I've had to hack my way around so many things here its insane....................................... 
+                    Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= (itemLibraryOptions.ExtractChapterImagesDuringLibraryScan ? Constants.MaxRetriesBeforeFallback * 5.5 : Constants.MaxRetriesBeforeFallback);
 
                     if (item.ProviderIds.Count > 0 || localMetadataFallback)
                     {
                         _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
-
-                        DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
-                        PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
-                        ServerConfiguration serverConfig = _serverConfiguration.Configuration;
 
                         string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
                         string LibraryType = item.GetType().Name;
@@ -207,8 +211,6 @@ namespace Emby.Notifications.Discord
             DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
 
             string LibraryType = Item.GetType().Name;
-
-            _logger.Debug(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", ""));
 
             if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType) && options != null) {
                 queuedUpdateCheck.Add(Item.Id, 0);
