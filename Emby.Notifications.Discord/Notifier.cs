@@ -29,7 +29,8 @@ namespace Emby.Notifications.Discord
         private readonly ILocalizationManager _localizationManager;
         private readonly HttpClient _httpClient;
 
-        public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { }; // k/v to store metadata retrieval attempts, if attempts fail at least x times then we check for individual metadatas or DDAMNIT WE NEED TO REWORK THIS
+        public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { };
+        public Dictionary<DiscordMessage, DiscordOptions> pendingSendQueue = new Dictionary<DiscordMessage, DiscordOptions> { };
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager)
         {
@@ -45,7 +46,22 @@ namespace Emby.Notifications.Discord
             _logger.Debug("Registered ItemAdd handler");
 
             Thread metadataUpdateChecker = new Thread(new ThreadStart(CheckForMetadata));
+            Thread pendingMessageSender = new Thread(new ThreadStart(QueuedMessageSender));
+
             metadataUpdateChecker.Start();
+            // pendingMessageSender.Start();
+        }
+
+        private async void QueuedMessageSender()
+        {
+            DiscordMessage messageToSend = pendingSendQueue.First().Key;
+            DiscordOptions options = pendingSendQueue.First().Value;
+
+            await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+
+            pendingSendQueue.Remove(messageToSend);
+
+            Thread.Sleep(Constants.MessageQueueSendInterval);
         }
 
         private void CheckForMetadata()
@@ -189,7 +205,7 @@ namespace Emby.Notifications.Discord
                             if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
                         }
 
-                        await DiscordWebhookHelper.ExecuteWebhook(mediaAddedEmbed, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                        pendingSendQueue.Add(mediaAddedEmbed, options);
 
                         queuedUpdateCheck.Remove(itemId);
                     } else
@@ -284,7 +300,7 @@ namespace Emby.Notifications.Discord
                         break;
                 }
 
-                await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                pendingSendQueue.Add(discordMessage, options);
             }
         }
     }
