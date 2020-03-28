@@ -110,9 +110,7 @@ namespace Emby.Notifications.Discord
                                 }
                             });
 
-                            _logger.Debug($"By {artistsFormat.First()}");
-
-                            if (!(artists.Count() > 0)) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
+                            if (artists.Count() > 0) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
                         }
                         else
                         {
@@ -203,11 +201,11 @@ namespace Emby.Notifications.Discord
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
             BaseItem Item = changeEvent.Item;
+            DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
 
             string LibraryType = Item.GetType().Name;
-            _logger.Debug("{0} has type {1}", Item.Id, LibraryType); // REMOVE WHEN TESTING DONE \\
 
-            if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType)) {
+            if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType) && options != null) {
                 queuedUpdateCheck.Add(Item.Id, 0);
             }
         }
