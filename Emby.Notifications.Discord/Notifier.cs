@@ -49,19 +49,22 @@ namespace Emby.Notifications.Discord
             Thread pendingMessageSender = new Thread(new ThreadStart(QueuedMessageSender));
 
             metadataUpdateChecker.Start();
-            // pendingMessageSender.Start();
+            pendingMessageSender.Start();
         }
 
         private async void QueuedMessageSender()
         {
-            DiscordMessage messageToSend = pendingSendQueue.First().Key;
-            DiscordOptions options = pendingSendQueue.First().Value;
+            if (pendingSendQueue.Count > 0)
+            {
+                DiscordMessage messageToSend = pendingSendQueue.First().Key;
+                DiscordOptions options = pendingSendQueue.First().Value;
 
-            await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
 
-            pendingSendQueue.Remove(messageToSend);
+                pendingSendQueue.Remove(messageToSend);
 
-            Thread.Sleep(Constants.MessageQueueSendInterval);
+                Thread.Sleep(Constants.MessageQueueSendInterval);
+            }
         }
 
         private void CheckForMetadata()
