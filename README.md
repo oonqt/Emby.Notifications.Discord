@@ -39,6 +39,9 @@ FAQ: Why doesn't my cover art always show?
 
 ![media added override](https://i.memester.xyz/u/6n3.png)
 
+#### Hide External Server Links
+This will exclude any external links (i.e. title, local images) that have a URL tied to your EmbyServer. Only Enable this if you want to prevent people from seeing your Server URL. If you already have remote access disabled, there is no need to enable this as the links will already be excluded. Local images will be proxied through one of my file hosting servers to hide the location of your server
+
 #### Mention Type
 This gives you the ability to choose between 2 mention types, `@here`, `@everyone`, or `None`
 The fundamental difference between `@everyone` and `@here` is `@everyone` will send the mention to everyone regardless of their status, while `@here` will only send the mention to the people who are currently online.
