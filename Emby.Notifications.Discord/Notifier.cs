@@ -234,7 +234,7 @@ namespace Emby.Notifications.Discord
         {
             DiscordOptions options = GetOptions(request.User);
 
-            if (options.MediaAddedOverride && !request.Name.Contains(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", ""))) {
+            if (options.MediaAddedOverride && !request.Name.Contains(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", "")) || !options.MediaAddedOverride) {
                 string serverName = _serverConfiguration.Configuration.ServerName;
 
                 string footerText;
