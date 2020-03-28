@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Emby.Notifications.Discord
 {
-    class DiscordEmbed
+    public class DiscordEmbed
     {
         public int color { get; set; }
         public string title { get; set; }
@@ -21,25 +21,25 @@ namespace Emby.Notifications.Discord
         public DateTime timestamp { get; set; }
     }
 
-    class Thumbnail
+    public class Thumbnail
     {
         public string url { get; set; }
     }
 
-    class Field
+    public class Field
     {
         public string name { get; set; }
         public string value { get; set; }
         public Boolean inline { get; set; }
     }
 
-    class Footer
+    public class Footer
     {
         public string text { get; set; }
         public string icon_url { get; set; }
     }
 
-    class DiscordMessage
+    public class DiscordMessage
     {
         public string avatar_url { get; set; }
         public string username { get; set; }
@@ -47,7 +47,7 @@ namespace Emby.Notifications.Discord
         public List<DiscordEmbed> embeds { get; set; }
     }
 
-    class DiscordWebhookHelper
+    public class DiscordWebhookHelper
     {
         public static int FormatColorCode(string hexCode)
         {
