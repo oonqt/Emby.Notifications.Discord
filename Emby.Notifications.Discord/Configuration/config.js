@@ -24,8 +24,8 @@
                 })[0] || {};
 
                 page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
-                page.querySelector("#chkOverrideServerName").checked = discordConfig.ServerNameOverride || true;
-                page.querySelector("#chkOverrideMediaAdded").checked = discordConfig.MediaAddedOverride || true;
+                page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
+                page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
                 page.querySelector("#mentionType").value = discordConfig.MentionType || "None";
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
@@ -35,6 +35,15 @@
 
                 loading.hide();
             });
+        }
+
+        function isEmpty(value) {
+            if (
+                value === undefined ||
+                value === null ||
+                (typeof value === "object" && Object.keys(value).length === 0) ||
+                (typeof value === "string" && value.trim() === 0)
+            ) return true; 
         }
 
         function saveConfig(e) {
