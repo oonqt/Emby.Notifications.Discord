@@ -54,17 +54,20 @@ namespace Emby.Notifications.Discord
 
         private async void QueuedMessageSender()
         {
-            if (pendingSendQueue.Count > 0)
+            do
             {
-                DiscordMessage messageToSend = pendingSendQueue.First().Key;
-                DiscordOptions options = pendingSendQueue.First().Value;
+                if (pendingSendQueue.Count > 0)
+                {
+                    DiscordMessage messageToSend = pendingSendQueue.First().Key;
+                    DiscordOptions options = pendingSendQueue.First().Value;
 
-                await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                    await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
 
-                pendingSendQueue.Remove(messageToSend);
+                    pendingSendQueue.Remove(messageToSend);
+                }
 
                 Thread.Sleep(Constants.MessageQueueSendInterval);
-            }
+            } while (true);
         }
 
         private void CheckForMetadata()
@@ -178,8 +181,6 @@ namespace Emby.Notifications.Discord
 
                                 Boolean didPopulate = true;
 
-                                _logger.Debug("{0} has provider {1} with providerid {2}", itemId, provider.Key, provider.Value);
-
                                 switch (provider.Key.ToLower())
                                 {
                                     case "imdb":
@@ -253,58 +254,62 @@ namespace Emby.Notifications.Discord
 
         public async Task SendNotification(UserNotification request, CancellationToken cancellationToken)
         {
-            DiscordOptions options = GetOptions(request.User);
+            await Task.Run(() =>
+            {
+                DiscordOptions options = GetOptions(request.User);
 
-            if (options.MediaAddedOverride && !request.Name.Contains(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", "")) || !options.MediaAddedOverride) {
-                string serverName = _serverConfiguration.Configuration.ServerName;
+                if (options.MediaAddedOverride && !request.Name.Contains(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0} ", "").Replace(" {1}", "")) || !options.MediaAddedOverride)
+                {
+                    string serverName = _serverConfiguration.Configuration.ServerName;
 
-                string footerText;
-                string requestName;
+                    string footerText;
+                    string requestName;
 
-                if (options.ServerNameOverride)
-                {
-                    footerText = $"From {serverName}";
-                    requestName = request.Name.Replace("Emby Server", serverName);
-                }
-                else
-                {
-                    requestName = request.Name;
-                    footerText = "From Emby Server";
-                }
-
-                DiscordMessage discordMessage = new DiscordMessage
-                {
-                    avatar_url = options.AvatarUrl,
-                    username = options.Username,
-                    embeds = new List<DiscordEmbed>()
-                {
-                    new DiscordEmbed()
+                    if (options.ServerNameOverride)
                     {
-                        color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
-                        title = requestName,
-                        description = request.Description,
-                        footer = new Footer
-                        {
-                            icon_url = options.AvatarUrl,
-                            text = footerText
-                        },
-                        timestamp = DateTime.Now
+                        footerText = $"From {serverName}";
+                        requestName = request.Name.Replace("Emby Server", serverName);
                     }
-                }
-                };
+                    else
+                    {
+                        requestName = request.Name;
+                        footerText = "From Emby Server";
+                    }
 
-                switch (options.MentionType)
-                {
-                    case MentionTypes.Everyone:
-                        discordMessage.content = "@everyone";
-                        break;
-                    case MentionTypes.Here:
-                        discordMessage.content = "@here";
-                        break;
-                }
+                    DiscordMessage discordMessage = new DiscordMessage
+                    {
+                        avatar_url = options.AvatarUrl,
+                        username = options.Username,
+                        embeds = new List<DiscordEmbed>()
+                        {
+                            new DiscordEmbed()
+                            {
+                                color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
+                                title = requestName,
+                                description = request.Description,
+                                footer = new Footer
+                                {
+                                    icon_url = options.AvatarUrl,
+                                    text = footerText
+                                },
+                                timestamp = DateTime.Now
+                            }
+                        }
+                    };
 
-                pendingSendQueue.Add(discordMessage, options);
-            }
+                    switch (options.MentionType)
+                    {
+                        case MentionTypes.Everyone:
+                            discordMessage.content = "@everyone";
+                            break;
+                        case MentionTypes.Here:
+                            discordMessage.content = "@here";
+                            break;
+                    }
+
+                    pendingSendQueue.Add(discordMessage, options);
+                }
+            });
         }
     }
 }
