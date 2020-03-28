@@ -24,6 +24,7 @@
                 })[0] || {};
 
                 page.querySelector('#chkEnableDiscord').checked = discordConfig.Enabled || false;
+                page.querySelector("#chkExcludeExternalServerLinks").checked = discordConfig.ExcludeExternalServerLinks || false;
                 page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
                 page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
                 page.querySelector("#mentionType").value = discordConfig.MentionType || "None";
@@ -66,6 +67,7 @@
                 } 
 
                 discordConfig.MediaBrowserUserId = userId;
+                discordConfig.ExcludeExternalServerLinks = page.querySelector("#chkExcludeExternalServerLinks").checked;
                 discordConfig.ServerNameOverride = page.querySelector("#chkOverrideServerName").checked;
                 discordConfig.MediaAddedOverride = page.querySelector("#chkOverrideMediaAdded").checked;
                 discordConfig.Enabled = page.querySelector('#chkEnableDiscord').checked;
