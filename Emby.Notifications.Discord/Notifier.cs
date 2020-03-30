@@ -120,8 +120,8 @@ namespace Emby.Notifications.Discord
 
                         // episodes contain MORE info
                         if(LibraryType == "Episode") {
-
-                        } else {
+                            mediaAddedEmbed.embeds.First().title = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name} has been added to {serverName}";
+                        } else {    
                             mediaAddedEmbed.embeds.First().title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}";
                         }
 
@@ -229,7 +229,8 @@ namespace Emby.Notifications.Discord
             } while (true);
         }
 
-
+        // in js i'd just do a slice(-2) but i couldnt find a cs equiv
+        private string formatIndex(int? number) => number < 10 ? $"0{number}" : number.ToString();
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
             BaseItem Item = changeEvent.Item;
