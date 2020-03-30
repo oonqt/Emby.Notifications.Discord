@@ -107,7 +107,6 @@ namespace Emby.Notifications.Discord
                             {
                                 new DiscordEmbed()
                                 {
-                                    title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}",
                                     color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
                                     footer = new Footer
                                     {
@@ -118,6 +117,13 @@ namespace Emby.Notifications.Discord
                                 }
                             },
                         };
+
+                        // episodes contain MORE info
+                        if(LibraryType == "Episode") {
+
+                        } else {
+                            mediaAddedEmbed.embeds.First().title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}";
+                        }
 
                         if(LibraryType == "Audio")
                         {
