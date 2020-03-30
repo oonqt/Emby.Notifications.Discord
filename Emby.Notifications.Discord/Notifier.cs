@@ -89,7 +89,6 @@ namespace Emby.Notifications.Discord
 
                     // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
                     // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
-                    // I've had to hack my way around so many things here its insane....................................... 
                     Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= (itemLibraryOptions.ExtractChapterImagesDuringLibraryScan ? Constants.MaxRetriesBeforeFallback * 5.5 : Constants.MaxRetriesBeforeFallback);
 
                     if (item.ProviderIds.Count > 0 || localMetadataFallback)
@@ -146,7 +145,7 @@ namespace Emby.Notifications.Discord
                             if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview; 
                         }
 
-                        if (!String.IsNullOrEmpty(sysInfo.WanAddress)) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
+                        if (!String.IsNullOrEmpty(sysInfo.WanAddress) && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
                         // populate images causes issues w/ images that are local
                         if (item.HasImage(ImageType.Primary))
@@ -156,7 +155,7 @@ namespace Emby.Notifications.Discord
                             if(!item.GetImageInfo(ImageType.Primary, 0).IsLocalFile)
                             {
                                 imageUrl = item.GetImagePath(ImageType.Primary);
-                            } else if (serverConfig.EnableRemoteAccess == true)
+                            } else if (serverConfig.EnableRemoteAccess == true && !options.ExcludeExternalServerLinks) // in the future we can proxy images through memester server if people want to hide their server address
                             {
                                 imageUrl = $"{sysInfo.WanAddress}/emby/Items/{itemId}/Images/Primary";
                             }
