@@ -172,6 +172,12 @@ namespace Emby.Notifications.Discord
                             };
                         }
 
+                        if(options.MentionType == MentionTypes.Everyone) {
+                            mediaAddedEmbed.content = "@everyone";
+                        } else if (options.MentionType == MentionTypes.Here) {
+                            mediaAddedEmbed.content = "@here";
+                        }
+
                         // populate external URLs
                         List<Field> providerFields = new List<Field>();
 
