@@ -122,7 +122,7 @@
 
                 ApiClient.ajax({
                     type: "POST",
-                    url: ApiClient.getUrl("Notification/Discord/Test/" + userConfig.MediaBrowserUserId)
+                    url: ApiClient.getUrl("Notifications/Discord/Test/" + userConfig.MediaBrowserUserId)
                 }).then(function () {
                     loading.hide();
 
