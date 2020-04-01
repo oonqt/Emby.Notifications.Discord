@@ -11,21 +11,21 @@ using MediaBrowser.Controller.Configuration;
 
 namespace Emby.Notifications.Discord.Api
 {
-    [Route("/Notification/Discord/Test/{UserID}", "POST", Summary = "Tests Discord")]
+    [Route("/Notifications/Discord/Test/{UserID}", "POST", Summary = "Tests Discord")]
     public class TestNotification : IReturnVoid
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string UserID { get; set; }
     }
 
-    class ServerApiEndpoints : IService
+    class NotificationService : IService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly IJsonSerializer _jsonSerializer;
 
-        public ServerApiEndpoints(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
+        public NotificationService(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
