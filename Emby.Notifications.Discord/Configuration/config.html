@@ -16,20 +16,20 @@
 
                 <form class="discordConfigurationForm">
                     <div class="selectContainer">
-                        <select is="emby-select" id="selectUser" label="Configure Discord notifications for:"></select>
+                        <select is="emby-select" id="selectUser" label="${LabelConfigureNotificationsFor}:"></select>
                     </div>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkEnableDiscord" />
                         <span>${LabelEnabled}</span>
                     </label>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="txtDiscordWebhookUri" required="required" label="* Discord Webhook URL:" />
+                        <input is="emby-input" type="text" id="txtDiscordWebhookUri" required="required" label="* ${LabelDiscordWebhookUrl}:" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="txtAvatarUrl" label="Avatar URL:" />
+                        <input is="emby-input" type="text" id="txtAvatarUrl" label="${LabelAvatarUrl}:" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="txtUsername" label="Webhook Username:" />
+                        <input is="emby-input" type="text" id="txtUsername" label="${LabelUsername}:" />
                     </div>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkOverrideServerName" />
@@ -44,7 +44,7 @@
                         <span>${LabelHideExternalLinks}</span>
                     </label>
                     <div class="selectContainer">
-                        <select is="emby-select" id="mentionType" label="Mention Type:">
+                        <select is="emby-select" id="mentionType" label="${LabelMentionType}:">
                             <option value="Everyone">@everyone</option>
                             <option value="Here">@here</option>
                             <option value="None">None</option>

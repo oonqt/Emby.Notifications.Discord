@@ -9,5 +9,10 @@
     "LabelHideExternalLinks": "Hide external links to your Server to preserve privacy (includes title link and locally served images)",
     "LabelEmbedColor": "Embed Color:",
     "LabelSendTestNotification": "Send Test Notification",
-    "LabelSave": "Save"
+    "LabelSave": "Save",
+    "LabelDiscordWebhookUrl": "Discord Webhook URL",
+    "LabelConfigureNotificationsFor": "Configure Discord notifications for",
+    "LabelAvatarUrl": "Avatar URL",
+    "LabelUsername": "Webhook Username",
+    "LabelMentionType": "Mention Type"
 }
