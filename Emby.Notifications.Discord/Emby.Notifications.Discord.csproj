@@ -10,12 +10,14 @@
     <None Remove="Configuration\config.html" />
     <None Remove="thumb.jpg" />
     <None Remove="Configuration\config.js" />
+    <None Remove="strings\en-US.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\config.html" />
     <EmbeddedResource Include="Configuration\config.js" />
     <EmbeddedResource Include="thumb.jpg" />
+    <EmbeddedResource Include="strings\en-US.json" />
   </ItemGroup>
 
   <ItemGroup>
