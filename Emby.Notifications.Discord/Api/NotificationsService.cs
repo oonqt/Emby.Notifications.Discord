@@ -18,14 +18,14 @@ namespace Emby.Notifications.Discord.Api
         public string UserID { get; set; }
     }
 
-    class NotificationService : IService
+    class NotificationsService : IService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly IJsonSerializer _jsonSerializer;
 
-        public NotificationService(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
+        public NotificationsService(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
