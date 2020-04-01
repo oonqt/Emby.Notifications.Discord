@@ -13,6 +13,6 @@
     "LabelDiscordWebhookUrl": "Discord Webhook URL",
     "LabelConfigureNotificationsFor": "Configure Discord notifications for",
     "LabelAvatarUrl": "Avatar URL",
-    "LabelUsername": "Webhook Username",
+    "LabelWebhookUsername": "Webhook Username",
     "LabelMentionType": "Mention Type"
 }
