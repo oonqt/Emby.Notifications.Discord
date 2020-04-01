@@ -2,6 +2,7 @@
     "loading",
     "alert",
     "dialogHelper",
+    "globalize",
     "emby-input",
     "emby-button",
     "formDialogStyle",
@@ -9,7 +10,7 @@
     "emby-linkbutton",
     "emby-checkbox",
     "emby-select"
-], function (loading, alert, dialogHelper) {
+], function (loading, alert, dialogHelper, globalize) {
         // ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!ebr let me in the plugin catalog!
 
         var pluginId = "05C9ED79-5645-4AA2-A161-D4F29E63535C";
@@ -88,8 +89,7 @@
                 loading.hide();
 
                 if (data.status === 400) {
-                    alert("${ErrorWebhookInvalid}");
-                    //The Discord Webhook URL appears to be invalid. Please try again with a valid URL
+                    alert(globalize.translate("ErrorWebhookInvalid"));
                 } else if (data.status === 500) {
                     var dialogOptions = { removeOnClose: true, scrollY: !1, size: "small" }
                     var dialog = dialogHelper.createDialog(dialogOptions);
@@ -97,7 +97,7 @@
                         dialog.classList.add("justify-content-center"),
                         dialog.style.height = "150px",
                         dialog.classList.add("align-items-center"),
-                        dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">${ErrorInternalServer}</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">${LabelOkay}</button></div>';
+                        dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">' + globalize.translate("ErrorInternalServer") +'</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">' + globalize.translate("LabelOkay") + '</button></div>';
 
                     dialogHelper.open(dialog);
 
@@ -117,7 +117,7 @@
 
                 if (!userConfig) {
                     loading.hide();
-                    alert("${MessageConfigureNotifications}");
+                    alert(globalize.translate("MessageConfigureNotifications"));
                 }
 
                 ApiClient.ajax({
@@ -126,7 +126,7 @@
                 }).then(function () {
                     loading.hide();
 
-                    alert("${MessageNotificationSent}");
+                    alert(globalize.translate("MessageNotificationSent"));
                 }, onError);
             });
         }
