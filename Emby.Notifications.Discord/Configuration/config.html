@@ -20,7 +20,7 @@
                     </div>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkEnableDiscord" />
-                        <span>Enabled</span>
+                        <span>${LabelEnabled}</span>
                     </label>
                     <div class="inputContainer">
                         <input is="emby-input" type="text" id="txtDiscordWebhookUri" required="required" label="* Discord Webhook URL:" />
@@ -33,15 +33,18 @@
                     </div>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkOverrideServerName" />
-                        <span>Replace "Emby Server" with your server name</span>
+                        <span>${labelServerNameOverride}</span>
+                        <!-- Replace "Emby Server" with your server name -->
                     </label>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkOverrideMediaAdded" />
-                        <span>Override the built in media added notification with a more extensive one</span>
+                        <span>${labelOverrideMediaAdded}</span>
+                        <!-- Override the built in media added notification with a more extensive one -->
                     </label>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkExcludeExternalServerLinks" />
-                        <span>Hide external links to your Server to preserve privacy (includes title link and locally served images)</span>
+                        <span>${labelHideExternalLinks}</span>
+                        <!-- Hide external links to your Server to preserve privacy (includes title link and locally served images) -->
                     </label>
                     <div class="selectContainer">
                         <select is="emby-select" id="mentionType" label="Mention Type:">
@@ -51,18 +54,18 @@
                         </select>
                     </div>
                     <div class="inputContainer">
-                        <label for="embedColor">Embed Color:</label>
+                        <label for="embedColor">${labelEmbedColor}</label>
                         <input type="color" id="embedColor" is="emby-input" style="height: 2.2em;" />
                         <input type="text" is="emby-input" id="txtEmbedColor" />
                     </div>
                     <div>
                         <button is="emby-button" type="button" class="raised button-cancel block" id="btnTestNotification">
-                            <span>Send Test Notification</span>
+                            <span>${labelSendTestNotification}</span>
                         </button>
                     </div>
                     <br />
                     <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${labelSave}</span></button>
                     </div>
                 </form>
             </div>
