@@ -33,18 +33,15 @@
                     </div>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkOverrideServerName" />
-                        <span>${labelServerNameOverride}</span>
-                        <!-- Replace "Emby Server" with your server name -->
+                        <span>${LabelServerNameOverride}</span>
                     </label>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkOverrideMediaAdded" />
-                        <span>${labelOverrideMediaAdded}</span>
-                        <!-- Override the built in media added notification with a more extensive one -->
+                        <span>${LabelOverrideMediaAdded}</span>
                     </label>
                     <label class="checkboxContainer">
                         <input is="emby-checkbox" type="checkbox" id="chkExcludeExternalServerLinks" />
-                        <span>${labelHideExternalLinks}</span>
-                        <!-- Hide external links to your Server to preserve privacy (includes title link and locally served images) -->
+                        <span>${LabelHideExternalLinks}</span>
                     </label>
                     <div class="selectContainer">
                         <select is="emby-select" id="mentionType" label="Mention Type:">
@@ -54,18 +51,18 @@
                         </select>
                     </div>
                     <div class="inputContainer">
-                        <label for="embedColor">${labelEmbedColor}</label>
+                        <label for="embedColor">${LabelEmbedColor}</label>
                         <input type="color" id="embedColor" is="emby-input" style="height: 2.2em;" />
                         <input type="text" is="emby-input" id="txtEmbedColor" />
                     </div>
                     <div>
                         <button is="emby-button" type="button" class="raised button-cancel block" id="btnTestNotification">
-                            <span>${labelSendTestNotification}</span>
+                            <span>${LabelSendTestNotification}</span>
                         </button>
                     </div>
                     <br />
                     <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${labelSave}</span></button>
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${LabelSave}</span></button>
                     </div>
                 </form>
             </div>

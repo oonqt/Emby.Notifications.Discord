@@ -88,7 +88,8 @@
                 loading.hide();
 
                 if (data.status === 400) {
-                    alert("The Discord Webhook URL appears to be invalid. Please try again with a valid URL");
+                    alert("${ErrorWebhookInvalid}");
+                    //The Discord Webhook URL appears to be invalid. Please try again with a valid URL
                 } else if (data.status === 500) {
                     var dialogOptions = { removeOnClose: true, scrollY: !1, size: "small" }
                     var dialog = dialogHelper.createDialog(dialogOptions);
@@ -96,7 +97,7 @@
                         dialog.classList.add("justify-content-center"),
                         dialog.style.height = "150px",
                         dialog.classList.add("align-items-center"),
-                        dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">Uh oh... Something unexpected happened. Please start a post on the <a class="button-link" is="emby-linkbutton" href="https://emby.media/community/index.php?/topic/82370-new-plugin-discord-notifications" target="_blank">forum thread</a> containing your server log and/or browser console output</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">Got It</button></div>';
+                        dialog.innerHTML = '<div class="formDialogHeader formDialogHeader-clear justify-content-center"><h2 class="formDialogHeaderTitle hide" style="margin-left:0;margin-top: .5em;padding: 0 1em;"></h2></div><div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent emby-scroller no-grow scrollY" style="width:100%;"><div class="scrollSlider dialogContentInner dialog-content-centered padded-left padded-right scrollSliderY" style="text-align:center;padding-bottom:1em;">${ErrorInternalServer}</div></div><div class="formDialogFooter formDialogFooter-clear formDialogFooter-flex"><button id="dialogSubmitBtn-3434321" is="emby-button" type="button" class="btnOption raised formDialogFooterItem formDialogFooterItem-autosize button-submit emby-button" data-id="ok" autofocus="">${LabelOkay}</button></div>';
 
                     dialogHelper.open(dialog);
 
@@ -116,7 +117,7 @@
 
                 if (!userConfig) {
                     loading.hide();
-                    alert("Please configure notification for this user first.");
+                    alert("${MessageConfigureNotifications}");
                 }
 
                 ApiClient.ajax({
@@ -125,7 +126,7 @@
                 }).then(function () {
                     loading.hide();
 
-                    alert("Your notification has been sent! Please check the Discord channel that your webhook is directed to");
+                    alert("${MessageNotificationSent}");
                 }, onError);
             });
         }
