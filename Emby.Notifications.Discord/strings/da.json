@@ -1,0 +1,18 @@
+{
+    "ErrorWebhookInvalid": "Discord Webhook URL ser ud til at v\u00e6re forkert. V\u00e6r venlig og pr\u00f8v med den rigtige URL.",
+    "ErrorInternalServer": "\u00c5hh nej, der gik et eller anden galt, v\u00e6r venlig og lav en sag p\u00e5 github eller lav en forum tr\u00e5d, der indeholder server log filen.",
+    "MessageConfigureNotifications": "V\u00e6r venlig og konfigurere, notifikationer for denne bruger f\u00f8rst.",
+    "MessageNotificationSent": "Din notifikation er blevet sendt. V\u00e6r venlig og tjek den Discord kanal, som din webhook er lavet til.",
+    "LabelEnabled": "Aktivere",
+    "LabelServerNameOverride": "Udskift \"Emby Server\" med din servers navn",
+    "LabelOverrideMediaAdded": "Tilsides\u00e6t den indbyggede medie tilf\u00f8jet notifikation, med en mere omfattende notifikation",
+    "LabelHideExternalLinks": "Gem ekstern link til din server, for at beskytte privatliv (inkludere title link og lokale serverede billeder)",
+    "LabelEmbedColor": "Embed farve:",
+    "LabelSendTestNotification": "Send en Test notifikation",
+    "LabelSave": "Gem",
+    "LabelDiscordWebhookUrl": "Discord Webhook URL",
+    "LabelConfigureNotificationsFor": "Konfigurere Discord notifikationer for",
+    "LabelAvatarUrl": "Avatar URL",
+    "LabelWebhookUsername": "Webhook bruger navn",
+    "LabelMentionType": "Omtale type"
+}
