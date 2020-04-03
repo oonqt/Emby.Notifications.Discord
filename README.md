@@ -12,12 +12,12 @@ This is the incoming messages URL that the plugin uses to send notifications to.
 ![creating webhooks](https://i.memester.xyz/u/avt.gif)
 
 #### Avatar URL (OPTIONAL)
-This overrides the avatar of the webhook. This can be a link to anything as long as it returns *just* an image. This overrides the image set in the Discord webhook settings, if you wish to use the avatar you set in the Discord configuration, leave this blank.
+This overrides the avatar of the webhook. This can be a link to anything as long as it returns *just* an image. This overrides the image set in the Discord webhook settings. If you wish to use the avatar you set in the Discord configuration, leave this blank.
 
 ![avatar url](https://i.memester.xyz/u/3f4.png)
 
 #### Webhook Username (OPTIONAL)
-This overrides the username of the webhook. If you wish to set your username via Discord, you can set it in the webhook settings. The default webhook username provided via Discord is "Spidey bot".
+This overrides the username of the webhook. If you wish to set your username via Discord, you can set it in the webhook settings. 
 
 ![username](https://i.memester.xyz/u/d84.png)
 
@@ -40,7 +40,7 @@ FAQ: Why doesn't my cover art always show?
 ![media added override](https://i.memester.xyz/u/6n3.png)
 
 #### Hide External Server Links
-This will exclude any external links (i.e. title, local images) that have a URL tied to your EmbyServer. Only Enable this if you want to prevent people from seeing your Server URL. If you already have remote access disabled, there is no need to enable this as the links will already be excluded. Local images will be proxied through one of my file hosting servers to hide the location of your server
+This will exclude any external links (i.e. title, local images) that have a URL tied to your EmbyServer. Only Enable this if you want to prevent people from seeing your Server URL. If you already have remote access disabled, there is no need to enable this as the links will already be excluded.
 
 #### Mention Type
 This gives you the ability to choose between 2 mention types, `@here`, `@everyone`, or `None`
