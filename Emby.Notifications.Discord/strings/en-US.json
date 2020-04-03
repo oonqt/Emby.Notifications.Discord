@@ -3,7 +3,6 @@
     "ErrorInternalServer": "Uh oh, something unexpected happened behind the scenes. Please file an issue on the Github or start a post on the forum thread containing the server log.",
     "MessageConfigureNotifications": "Please configure notifications for this user first.",
     "MessageNotificationSent": "Your notification has been sent! Please check the Discord channel that your webhook is directed to",
-    "LabelEnabled": "Enabled",
     "LabelServerNameOverride": "Replace \"Emby Server\" with your server name",
     "LabelOverrideMediaAdded": "Override the built in media added notification with a more extensive one",
     "LabelHideExternalLinks": "Hide external links to your Server to preserve privacy (includes title link and locally served images)",

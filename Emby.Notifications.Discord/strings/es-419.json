@@ -3,7 +3,6 @@
     "ErrorInternalServer": "Algo inesperado sucedi\u00f3 entre bambalinas. Por favor, presente un problema en el Github o inicie una publicaci\u00f3n en el hilo del foro que contiene el registro del servidor.",
     "MessageConfigureNotifications": "Configure primero la notificaci\u00f3n para este usuario.",
     "MessageNotificationSent": "Configure primero la notificaci\u00f3n para este usuario.",
-    "LabelEnabled": "\u00a1Su notificaci\u00f3n ha sido enviada! Compruebe el canal Discord al que su webhook est\u00e1 dirigido",
     "LabelServerNameOverride": "Reemplace \"Emby Server\" por el nombre del servidor",
     "LabelOverrideMediaAdded": "Reemplazar el medio incorporado agreg\u00f3 la notificaci\u00f3n con una m\u00e1s extensa",
     "LabelHideExternalLinks": "Ocultar v\u00ednculos externos a su servidor para preservar la privacidad (incluye enlace de t\u00edtulo e im\u00e1genes servidas localmente)",

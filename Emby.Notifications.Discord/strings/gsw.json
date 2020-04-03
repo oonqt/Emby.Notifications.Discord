@@ -3,7 +3,6 @@
     "ErrorInternalServer": "Oha, es ist etwas unerwartetes im Hintergrund passiert. Bitte er\u00f6ffne ein Problem auf GitHub oder starte einen Forumsthread mit dem Server Log.",
     "MessageConfigureNotifications": "Bitte konfiguriere zuerst Benachrichtigungen f\u00fcr diesen Benutzer.",
     "MessageNotificationSent": "Deine Benachrichtigung wurde gesendet! Bitte \u00fcberpr\u00fcfe den Discord Channel auf den die Webhook zeigt.",
-    "LabelEnabled": "Aktiviert",
     "LabelServerNameOverride": "Ersetze \u201eEmby Server\u201c mit deinem Server-Namen",
     "LabelOverrideMediaAdded": "Ersetze die Standard \u201aMedien hinzugef\u00fcgt\u2018-Benachrichtigung durch eine ausf\u00fchrlichere Benachrichtigung ",
     "LabelHideExternalLinks": "Verstecke externe Links zu deinem Server um deine Privatsph\u00e4re zu bewahren (schlie\u00dft Titel-Link und lokale Bilder mit ein)",
