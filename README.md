@@ -50,6 +50,6 @@ The fundamental difference between `@everyone` and `@here` is `@everyone` will s
 
 
 #### Embed Color
-This sets the accent color of the Rich Embed. It can be set via a color picker or by entering a hex value. The default color is green.
+This sets the accent color of the Rich Embed. It can be set via the color picker or by entering a hex value. The default color is green.
 
 ![embed accent color](https://i.memester.xyz/u/akd.png)
