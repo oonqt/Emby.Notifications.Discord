@@ -10,14 +10,38 @@
     <None Remove="Configuration\config.html" />
     <None Remove="thumb.jpg" />
     <None Remove="Configuration\config.js" />
+    <None Remove="strings\da.json" />
+    <None Remove="strings\de.json" />
     <None Remove="strings\en-US.json" />
+    <None Remove="strings\es-419.json" />
+    <None Remove="strings\es-MX.json" />
+    <None Remove="strings\es-US.json" />
+    <None Remove="strings\es.json" />
+    <None Remove="strings\fr-CA.json" />
+    <None Remove="strings\fr.json" />
+    <None Remove="strings\gsw.json" />
+    <None Remove="strings\zh-CN.json" />
+    <None Remove="strings\zh-HK.json" />
+    <None Remove="strings\zh-TW.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\config.html" />
     <EmbeddedResource Include="Configuration\config.js" />
     <EmbeddedResource Include="thumb.jpg" />
+    <EmbeddedResource Include="strings\da.json" />
+    <EmbeddedResource Include="strings\de.json" />
     <EmbeddedResource Include="strings\en-US.json" />
+    <EmbeddedResource Include="strings\es-419.json" />
+    <EmbeddedResource Include="strings\es-MX.json" />
+    <EmbeddedResource Include="strings\es-US.json" />
+    <EmbeddedResource Include="strings\es.json" />
+    <EmbeddedResource Include="strings\fr-CA.json" />
+    <EmbeddedResource Include="strings\fr.json" />
+    <EmbeddedResource Include="strings\gsw.json" />
+    <EmbeddedResource Include="strings\zh-CN.json" />
+    <EmbeddedResource Include="strings\zh-HK.json" />
+    <EmbeddedResource Include="strings\zh-TW.json" />
   </ItemGroup>
 
   <ItemGroup>
