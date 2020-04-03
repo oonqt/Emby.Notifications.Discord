@@ -130,11 +130,16 @@ namespace Emby.Notifications.Discord
                         };
 
                         // populate title
+
+                        string titleText;
+
                         if(LibraryType == "Episode") {
-                            mediaAddedEmbed.embeds.First().title = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name} has been added to {serverName}";
+                           titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
                         } else {    
-                            mediaAddedEmbed.embeds.First().title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}";
+                            titleText = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")}";
                         }
+
+                        mediaAddedEmbed.embeds.First().title = _localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0}", titleText).Replace("{1}", serverName);
 
                         // populate description
                         if(LibraryType == "Audio")
