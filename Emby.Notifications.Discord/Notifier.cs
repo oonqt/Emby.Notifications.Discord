@@ -16,6 +16,7 @@ using MediaBrowser.Model.Configuration;
 using MediaBrowser.Controller;
 using MediaBrowser.Model.System;
 using MediaBrowser.Model.Globalization;
+using MediaBrowser.Model.Library;
 
 namespace Emby.Notifications.Discord
 {
@@ -28,11 +29,13 @@ namespace Emby.Notifications.Discord
         private readonly IServerApplicationHost _applicationHost;
         private readonly ILocalizationManager _localizationManager;
         private readonly HttpClient _httpClient;
+        private readonly IUserViewManager _userViewManager;
+        private readonly IUserManager _userManager;
 
         public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { };
         public Dictionary<DiscordMessage, DiscordOptions> pendingSendQueue = new Dictionary<DiscordMessage, DiscordOptions> { };
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager, IUserViewManager userViewManager, IUserManager userManager)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
@@ -41,6 +44,8 @@ namespace Emby.Notifications.Discord
             _libraryManager = libraryManager;
             _localizationManager = localizationManager;
             _applicationHost = applicationHost;
+            _userViewManager = userViewManager;
+            _userManager = userManager;
 
             _libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
@@ -85,7 +90,13 @@ namespace Emby.Notifications.Discord
                     LibraryOptions itemLibraryOptions = _libraryManager.GetLibraryOptions(item);
                     DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
                     PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
-                    ServerConfiguration serverConfig = _serverConfiguration.Configuration;
+                    ServerConfiguration serverConfig = _serverConfiguration.Configuration;                
+
+                    if(!isInVisibleLibrary(options.MediaBrowserUserId, item)) {
+                        queuedUpdateCheck.Remove(itemId);
+                        _logger.Debug("User does not have access to library, skipping...");
+                        return;
+                    }
 
                     // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
                     // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
@@ -118,13 +129,14 @@ namespace Emby.Notifications.Discord
                             },
                         };
 
-                        // episodes contain MORE info
+                        // populate title
                         if(LibraryType == "Episode") {
                             mediaAddedEmbed.embeds.First().title = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name} has been added to {serverName}";
                         } else {    
                             mediaAddedEmbed.embeds.First().title = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")} has been added to {serverName}";
                         }
 
+                        // populate description
                         if(LibraryType == "Audio")
                         {
                             List<BaseItem> artists = _libraryManager.GetAllArtists(item);
@@ -151,9 +163,10 @@ namespace Emby.Notifications.Discord
                             if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview; 
                         }
 
+                        // populate title URL
                         if (!String.IsNullOrEmpty(sysInfo.WanAddress) && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
-                        // populate images causes issues w/ images that are local
+                        // populate images
                         if (item.HasImage(ImageType.Primary))
                         {
                             string imageUrl = "";
@@ -247,6 +260,22 @@ namespace Emby.Notifications.Discord
             if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType) && options != null) {
                 queuedUpdateCheck.Add(Item.Id, 0);
             }
+        }
+
+        private bool isInVisibleLibrary(string UserId, BaseItem item) {
+            Boolean isIn = false;
+
+            _userViewManager.GetUserViews(
+                new UserViewQuery {
+                    UserId = _userManager.GetInternalId(Guid.Parse(UserId))
+                }
+            ).ToList().ForEach(folder => {
+                if(folder.GetItemIdList(new InternalItemsQuery {}).Contains(item.InternalId)) {
+                    isIn = true;
+                }
+            });
+
+            return isIn;
         }
 
         public bool IsEnabledForUser(User user)
