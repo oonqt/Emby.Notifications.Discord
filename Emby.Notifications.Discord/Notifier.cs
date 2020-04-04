@@ -1,4 +1,5 @@
-﻿using MediaBrowser.Controller.Entities;
+﻿using System.Net.Http.Headers;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Logging;
 using Emby.Notifications.Discord.Configuration;
@@ -17,6 +18,11 @@ using MediaBrowser.Controller;
 using MediaBrowser.Model.System;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Library;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Providers;
+using MediaBrowser.Model.IO;
+using System.IO;
+using System.Net;
 
 namespace Emby.Notifications.Discord
 {
@@ -31,11 +37,13 @@ namespace Emby.Notifications.Discord
         private readonly HttpClient _httpClient;
         private readonly IUserViewManager _userViewManager;
         private readonly IUserManager _userManager;
+        private readonly IFileSystem _fileSystem;
+
 
         public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { };
         public Dictionary<DiscordMessage, DiscordOptions> pendingSendQueue = new Dictionary<DiscordMessage, DiscordOptions> { };
 
-        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager, IUserViewManager userViewManager, IUserManager userManager)
+        public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager, IUserViewManager userViewManager, IUserManager userManager, IFileSystem fileSystem)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
             _httpClient = new HttpClient();
@@ -46,6 +54,7 @@ namespace Emby.Notifications.Discord
             _applicationHost = applicationHost;
             _userViewManager = userViewManager;
             _userManager = userManager;
+            _fileSystem = fileSystem;
 
             _libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
@@ -182,6 +191,30 @@ namespace Emby.Notifications.Discord
                             } else if (serverConfig.EnableRemoteAccess == true && !options.ExcludeExternalServerLinks) // in the future we can proxy images through memester server if people want to hide their server address
                             {
                                 imageUrl = $"{sysInfo.WanAddress}/emby/Items/{itemId}/Images/Primary";
+                            } else {
+                                string localPath = item.GetImagePath(ImageType.Primary);
+                                Stream imageData =  _fileSystem.OpenRead(localPath);
+                                StreamContent imageStream = new StreamContent(imageData);
+                                ByteArrayContent imageStreamContent = new ByteArrayContent(await imageStream.ReadAsByteArrayAsync());
+                                MultipartFormDataContent formData = new MultipartFormDataContent();
+                                
+                                imageStreamContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+
+                                formData.Add(imageStreamContent, "file", "file.png");
+
+                                HttpResponseMessage res = await _httpClient.PostAsync("https://i.memester.xyz/upload?format=json", formData);
+
+                                string content = await res.Content.ReadAsStringAsync();
+
+                                MemesterServiceResponse memesterServiceResponse = _jsonSerializer.DeserializeFromString<MemesterServiceResponse>(content);
+                            
+                                if(res.StatusCode == HttpStatusCode.Created) {
+                                    imageUrl = memesterServiceResponse.filePath;
+
+                                    _logger.Debug("Image url: {0}", imageUrl);
+                                } else {
+                                    _logger.Debug("Failed to proxy image. Status: {0} Data: {1}", res.StatusCode, content);
+                                }
                             }
 
                             mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
@@ -189,6 +222,7 @@ namespace Emby.Notifications.Discord
                                 url = imageUrl
                             };
                         }
+
 
                         if(options.MentionType == MentionTypes.Everyone) {
                             mediaAddedEmbed.content = "@everyone";
@@ -254,6 +288,10 @@ namespace Emby.Notifications.Discord
         }
 
         // in js i'd just do a slice(-2) but i couldnt find a cs equiv
+
+        private class MemesterServiceResponse {
+            public string filePath { get; set; }
+        }
         private string formatIndex(int? number) => number < 10 ? $"0{number}" : number.ToString();
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
