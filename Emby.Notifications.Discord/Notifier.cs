@@ -290,7 +290,9 @@ namespace Emby.Notifications.Discord
         private class MemesterServiceResponse {
             public string filePath { get; set; }
         }
+        
         private string formatIndex(int? number) => number < 10 ? $"0{number}" : number.ToString();
+        
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
         {
             BaseItem Item = changeEvent.Item;
