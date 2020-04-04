@@ -210,8 +210,6 @@ namespace Emby.Notifications.Discord
                             
                                 if(res.StatusCode == HttpStatusCode.Created) {
                                     imageUrl = memesterServiceResponse.filePath;
-
-                                    _logger.Debug("Image url: {0}", imageUrl);
                                 } else {
                                     _logger.Debug("Failed to proxy image. Status: {0} Data: {1}", res.StatusCode, content);
                                 }
