@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using MediaBrowser.Controller.Entities;
+﻿using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Logging;
 using Emby.Notifications.Discord.Configuration;
@@ -18,15 +17,13 @@ using MediaBrowser.Controller;
 using MediaBrowser.Model.System;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Library;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.IO;
 using System.IO;
-using System.Net;
+using MediaBrowser.Controller.Plugins;
 
 namespace Emby.Notifications.Discord
 {
-    public class Notifier : INotificationService
+    public class Notifier : INotificationService, IServerEntryPoint
     {
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
@@ -42,6 +39,8 @@ namespace Emby.Notifications.Discord
 
         public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { };
         public Dictionary<DiscordMessage, DiscordOptions> pendingSendQueue = new Dictionary<DiscordMessage, DiscordOptions> { };
+        Task metadataUpdateChecker;
+        Task pendingMessageSender;
 
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager, IUserViewManager userViewManager, IUserManager userManager, IFileSystem fileSystem)
         {
@@ -55,21 +54,34 @@ namespace Emby.Notifications.Discord
             _userViewManager = userViewManager;
             _userManager = userManager;
             _fileSystem = fileSystem;
+        }
 
+        public void Run()
+        {
             _libraryManager.ItemAdded += ItemAddHandler;
             _logger.Debug("Registered ItemAdd handler");
 
-            Thread metadataUpdateChecker = new Thread(new ThreadStart(CheckForMetadata));
-            Thread pendingMessageSender = new Thread(new ThreadStart(QueuedMessageSender));
+            metadataUpdateChecker = new Task(CheckForMetadata);
+            pendingMessageSender = new Task(QueuedMessageSender);
 
             metadataUpdateChecker.Start();
             pendingMessageSender.Start();
+        }
+
+        public void Dispose()
+        {
+            _libraryManager.ItemAdded -= ItemAddHandler;
+
+            metadataUpdateChecker.Dispose();
+            pendingMessageSender.Dispose();
         }
 
         private async void QueuedMessageSender()
         {
             do
             {
+                _logger.Debug("We Wuz Kangz N Sheit");
+
                 if (pendingSendQueue.Count > 0)
                 {
                     DiscordMessage messageToSend = pendingSendQueue.First().Key;
@@ -194,24 +206,11 @@ namespace Emby.Notifications.Discord
                             } else {
                                 string localPath = item.GetImagePath(ImageType.Primary);
                                 Stream imageData =  _fileSystem.OpenRead(localPath);
-                                StreamContent imageStream = new StreamContent(imageData);
-                                ByteArrayContent imageStreamContent = new ByteArrayContent(await imageStream.ReadAsByteArrayAsync());
-                                MultipartFormDataContent formData = new MultipartFormDataContent();
                                 
-                                imageStreamContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-
-                                formData.Add(imageStreamContent, "file", "file.png");
-
-                                HttpResponseMessage res = await _httpClient.PostAsync("https://i.memester.xyz/upload?format=json", formData);
-
-                                string content = await res.Content.ReadAsStringAsync();
-
-                                MemesterServiceResponse memesterServiceResponse = _jsonSerializer.DeserializeFromString<MemesterServiceResponse>(content);
-                            
-                                if(res.StatusCode == HttpStatusCode.Created) {
-                                    imageUrl = memesterServiceResponse.filePath;
-                                } else {
-                                    _logger.Debug("Failed to proxy image. Status: {0} Data: {1}", res.StatusCode, content);
+                                try {
+                                    imageUrl = await MemesterServiceHelper.UploadImage(imageData, _jsonSerializer, _httpClient);
+                                } catch (System.Exception e) {
+                                    _logger.ErrorException("Failed to proxy image", e);
                                 }
                             }
 
@@ -286,11 +285,6 @@ namespace Emby.Notifications.Discord
         }
 
         // in js i'd just do a slice(-2) but i couldnt find a cs equiv
-
-        private class MemesterServiceResponse {
-            public string filePath { get; set; }
-        }
-        
         private string formatIndex(int? number) => number < 10 ? $"0{number}" : number.ToString();
         
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
