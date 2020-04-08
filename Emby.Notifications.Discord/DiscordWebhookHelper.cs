@@ -1,10 +1,10 @@
-﻿using MediaBrowser.Model.Logging;
+﻿using System;
+using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
-using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Emby.Notifications.Discord
@@ -54,7 +54,7 @@ namespace Emby.Notifications.Discord
             return int.Parse(hexCode.Substring(1, 6), System.Globalization.NumberStyles.HexNumber);
         }
 
-        public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer, ILogger _logger, HttpClient _httpClient)
+        public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer, HttpClient _httpClient)
         {
             StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
 
@@ -66,13 +66,15 @@ namespace Emby.Notifications.Discord
 
                 HttpResponseMessage response = await _httpClient.SendAsync(req).ConfigureAwait(false);
 
+                string content = await response.Content.ReadAsStringAsync();
 
-                _logger.Debug("Request to {0} completed with status {1} embed object: {2}", req.RequestUri, response.StatusCode, _jsonSerializer.SerializeToString(message));
+                if(response.StatusCode != HttpStatusCode.NoContent) {
+                    throw new System.Exception($"Status: {response.StatusCode} content: {content}");
+                }
             }
             catch (HttpRequestException e)
             {
-                _logger.Error("Failed to make request to Discord: {0}", e);
-                throw new ArgumentException(); // return 400 response
+                throw new System.Exception(e.Message);
             }
         }
     }
