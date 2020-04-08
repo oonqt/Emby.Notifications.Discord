@@ -28,12 +28,23 @@
                 page.querySelector("#chkExcludeExternalServerLinks").checked = discordConfig.ExcludeExternalServerLinks || false;
                 page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
                 page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
-                page.querySelector("#mentionType").value = discordConfig.MentionType || "None";
+                
+                // page.querySelector("#chkEnableMovies").checked = discordConfig.EnableMovies || false;
+                // page.querySelector("#chkEnableCollections").checked = discordConfig.EnableCollections || false;
+                // page.querySelector("#chkEnableEpisodes").checked = discordConfig.EnableEpisodes || false;
+                // page.querySelector("#chkEnableSeasons").checked = discordConfig.EnableSeasons || false;
+                // page.querySelector("#chkEnableSeries").checked = discordConfig.EnableSeries || false;
+                // page.querySelector("#chkEnableAlbums").checked = discordConfig.EnableAlbums || false;
+                // page.querySelector("#chkEnableSongs").checked = discordConfig.EnableSongs || false;
+
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
                 page.querySelector("#txtAvatarUrl").value = discordConfig.AvatarUrl || "";
+                page.querySelector("#mentionType").value = discordConfig.MentionType || "None";
                 page.querySelector("#embedColor").value = discordConfig.EmbedColor || defaultEmbedColor;
                 page.querySelector("#txtEmbedColor").value = discordConfig.EmbedColor || defaultEmbedColor;
+
+                // toggleNotificationTypes(page);
 
                 loading.hide();
             });
@@ -46,6 +57,16 @@
                 (typeof value === "object" && Object.keys(value).length === 0) ||
                 (typeof value === "string" && value.trim() === 0)
             ) return true; 
+        }
+
+        function toggleNotificationTypes(page) {
+            var notificationTypeGroup = page.querySelector("#notificationTypeGroup");
+
+            if(page.querySelector("#chkOverrideMediaAdded").checked) {
+                notificationTypeGroup.hidden = false;
+            } else {
+                notificationTypeGroup.hidden = true;
+            }
         }
 
         function saveConfig(e) {
@@ -67,11 +88,20 @@
                     config.Options.push(discordConfig);
                 } 
 
+                discordConfig.Enabled = page.querySelector('#chkEnableDiscord').checked;
                 discordConfig.MediaBrowserUserId = userId;
                 discordConfig.ExcludeExternalServerLinks = page.querySelector("#chkExcludeExternalServerLinks").checked;
                 discordConfig.ServerNameOverride = page.querySelector("#chkOverrideServerName").checked;
                 discordConfig.MediaAddedOverride = page.querySelector("#chkOverrideMediaAdded").checked;
-                discordConfig.Enabled = page.querySelector('#chkEnableDiscord').checked;
+
+                // discordConfig.EnableMovies = page.querySelector("#chkEnableMovies").checked;
+                // discordConfig.EnableCollections = page.querySelector("#chkEnableCollections").checked;
+                // discordConfig.EnableEpisodes = page.querySelector("#chkEnableEpisodes").checked;
+                // discordConfig.EnableSeasons = page.querySelector("#chkEnableSeasons").checked;
+                // discordConfig.EnableSeries = page.querySelector("#chkEnableSeries").checked;
+                // discordConfig.EnableAlbums = page.querySelector("#chkEnableAlbums").checked;
+                // discordConfig.EnableSongs = page.querySelector("#chkEnableSongs").checked;
+
                 discordConfig.MentionType = page.querySelector("#mentionType").value;
                 discordConfig.DiscordWebhookURI = page.querySelector("#txtDiscordWebhookUri").value;
                 discordConfig.Username = page.querySelector("#txtUsername").value;
@@ -171,6 +201,10 @@
 
                 page.querySelector("#selectUser").addEventListener("change", function () {
                     loadUserConfig(page, this.value);
+                });
+
+                page.querySelector("#chkOverrideMediaAdded").addEventListener("change", function() {
+                    toggleNotificationTypes(page);
                 });
 
                 page.querySelector("#embedColor").addEventListener("change", function () {
