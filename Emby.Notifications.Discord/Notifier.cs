@@ -80,14 +80,18 @@ namespace Emby.Notifications.Discord
         {
             do
             {
-                _logger.Debug("We Wuz Kangz N Sheit");
-
                 if (pendingSendQueue.Count > 0)
                 {
                     DiscordMessage messageToSend = pendingSendQueue.First().Key;
                     DiscordOptions options = pendingSendQueue.First().Value;
 
-                    await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+                    try {
+                        await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _httpClient);
+                    }
+                    catch (System.Exception e) 
+                    {
+                        _logger.ErrorException("Failed to execute webhook", e);
+                    }
 
                     pendingSendQueue.Remove(messageToSend);
                 }

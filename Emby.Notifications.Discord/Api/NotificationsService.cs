@@ -90,7 +90,13 @@ namespace Emby.Notifications.Discord.Api
                     break;
             }
 
-            await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _logger, _httpClient);
+            try {
+                await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _httpClient);
+            }
+            catch (System.Exception e) {
+                _logger.ErrorException("Failed to execute webhook", e);
+                throw new ArgumentException();
+            }
         } 
     }
 }
