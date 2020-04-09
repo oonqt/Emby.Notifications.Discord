@@ -6,6 +6,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using System.Net.Http;
 using System.IO;
+using System;
 
 namespace Emby.Notifications.Discord
 {
@@ -36,10 +37,10 @@ namespace Emby.Notifications.Discord
                 if(res.StatusCode == HttpStatusCode.Created) {
                     return memesterResponse.filePath;
                 } else {
-                    throw new System.Exception($"Status: {res.StatusCode} Server Response: {responseContent}");
+                    throw new Exception($"Status: {res.StatusCode} Server Response: {responseContent}");
                 }
             } catch (HttpRequestException e) {
-                throw new System.Exception(e.Message);
+                throw new Exception(e.Message);
             }
         }
     }
