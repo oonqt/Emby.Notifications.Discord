@@ -1,5 +1,4 @@
 ﻿using System;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
 using System.Net;

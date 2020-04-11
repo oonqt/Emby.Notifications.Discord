@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using MediaBrowser.Controller.Entities;
+﻿using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Logging;
 using Emby.Notifications.Discord.Configuration;
@@ -18,13 +17,9 @@ using MediaBrowser.Controller;
 using MediaBrowser.Model.System;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Library;
-using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.IO;
 using System.IO;
-using System.Net;
 using System.Timers;
-using System.ComponentModel;
 
 namespace Emby.Notifications.Discord
 {
@@ -293,7 +288,7 @@ namespace Emby.Notifications.Discord
             }
             catch (Exception e)
             {
-                _logger.ErrorException("Something unexpected happened in the update checker", e);
+                _logger.ErrorException("Something unexpected happened in the item update checker", e);
             }
         }
 

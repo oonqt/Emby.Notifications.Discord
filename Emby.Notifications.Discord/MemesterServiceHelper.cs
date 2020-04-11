@@ -1,8 +1,6 @@
-using System.Runtime.CompilerServices;
 using System.Net.Http.Headers;
 using System.Net;
 using System.Threading.Tasks;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using System.Net.Http;
 using System.IO;
