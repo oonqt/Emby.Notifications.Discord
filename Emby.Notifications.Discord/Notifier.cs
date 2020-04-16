@@ -150,7 +150,7 @@ namespace Emby.Notifications.Discord
                         {
                             titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
                         } else if (LibraryType == "Season") {
-                            titleText = $"{item.Parent.Parent.Name} {item.Name}";
+                            titleText = $"{item.Parent.Name} {item.Name}";
                         }
                         else
                         {
