@@ -317,7 +317,6 @@ namespace Emby.Notifications.Discord
             if(options.EnableSeasons) allowedItemTypes.Add("Season");
             if(options.EnableSongs) allowedItemTypes.Add("Audio");
 
-
             if (!Item.IsVirtualItem && Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) && options != null)
             {
                 queuedUpdateCheck.Add(Item.Id, 0);
@@ -334,7 +333,7 @@ namespace Emby.Notifications.Discord
                     UserId = _userManager.GetInternalId(Guid.Parse(UserId))
                 }
             ).ToList().ForEach(folder => {
-                if (folder.GetItemIdList(new InternalItemsQuery { IncludeItemTypes = Constants.AllowedMediaTypes, Recursive = true }).Contains(item.InternalId))
+                if (folder.GetItemIdList(new InternalItemsQuery { IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Episode", "Series", "Season", "Audio" }, Recursive = true }).Contains(item.InternalId))
                 {
                     isIn = true;
                 }
