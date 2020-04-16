@@ -29,13 +29,12 @@
                 page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
                 page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
                 
-                // page.querySelector("#chkEnableMovies").checked = discordConfig.EnableMovies || false;
-                // page.querySelector("#chkEnableCollections").checked = discordConfig.EnableCollections || false;
-                // page.querySelector("#chkEnableEpisodes").checked = discordConfig.EnableEpisodes || false;
-                // page.querySelector("#chkEnableSeasons").checked = discordConfig.EnableSeasons || false;
-                // page.querySelector("#chkEnableSeries").checked = discordConfig.EnableSeries || false;
-                // page.querySelector("#chkEnableAlbums").checked = discordConfig.EnableAlbums || false;
-                // page.querySelector("#chkEnableSongs").checked = discordConfig.EnableSongs || false;
+                page.querySelector("#chkEnableMovies").checked = discordConfig.EnableMovies || false;
+                page.querySelector("#chkEnableEpisodes").checked = discordConfig.EnableEpisodes || false;
+                page.querySelector("#chkEnableSeasons").checked = discordConfig.EnableSeasons || false;
+                page.querySelector("#chkEnableSeries").checked = discordConfig.EnableSeries || false;
+                page.querySelector("#chkEnableAlbums").checked = discordConfig.EnableAlbums || false;
+                page.querySelector("#chkEnableSongs").checked = discordConfig.EnableSongs || false;
 
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
@@ -44,7 +43,7 @@
                 page.querySelector("#embedColor").value = discordConfig.EmbedColor || defaultEmbedColor;
                 page.querySelector("#txtEmbedColor").value = discordConfig.EmbedColor || defaultEmbedColor;
 
-                // toggleNotificationTypes(page);
+                toggleNotificationTypes(page);
 
                 loading.hide();
             });
@@ -94,13 +93,12 @@
                 discordConfig.ServerNameOverride = page.querySelector("#chkOverrideServerName").checked;
                 discordConfig.MediaAddedOverride = page.querySelector("#chkOverrideMediaAdded").checked;
 
-                // discordConfig.EnableMovies = page.querySelector("#chkEnableMovies").checked;
-                // discordConfig.EnableCollections = page.querySelector("#chkEnableCollections").checked;
-                // discordConfig.EnableEpisodes = page.querySelector("#chkEnableEpisodes").checked;
-                // discordConfig.EnableSeasons = page.querySelector("#chkEnableSeasons").checked;
-                // discordConfig.EnableSeries = page.querySelector("#chkEnableSeries").checked;
-                // discordConfig.EnableAlbums = page.querySelector("#chkEnableAlbums").checked;
-                // discordConfig.EnableSongs = page.querySelector("#chkEnableSongs").checked;
+                discordConfig.EnableMovies = page.querySelector("#chkEnableMovies").checked;
+                discordConfig.EnableEpisodes = page.querySelector("#chkEnableEpisodes").checked;
+                discordConfig.EnableSeasons = page.querySelector("#chkEnableSeasons").checked;
+                discordConfig.EnableSeries = page.querySelector("#chkEnableSeries").checked;
+                discordConfig.EnableAlbums = page.querySelector("#chkEnableAlbums").checked;
+                discordConfig.EnableSongs = page.querySelector("#chkEnableSongs").checked;
 
                 discordConfig.MentionType = page.querySelector("#mentionType").value;
                 discordConfig.DiscordWebhookURI = page.querySelector("#txtDiscordWebhookUri").value;

@@ -20,6 +20,7 @@ using MediaBrowser.Model.Library;
 using MediaBrowser.Model.IO;
 using System.IO;
 using System.Timers;
+using MediaBrowser.Controller.Providers;
 
 namespace Emby.Notifications.Discord
 {
@@ -308,7 +309,16 @@ namespace Emby.Notifications.Discord
 
             string LibraryType = Item.GetType().Name;
 
-            if (!Item.IsVirtualItem && Array.Exists(Constants.AllowedMediaTypes, t => t == LibraryType) && options != null)
+            List<string> allowedItemTypes = new List<string> {};
+            if(options.EnableAlbums) allowedItemTypes.Add("MusicAlbum");
+            if(options.EnableMovies) allowedItemTypes.Add("Movie");
+            if(options.EnableEpisodes) allowedItemTypes.Add("Episode");
+            if(options.EnableSeries) allowedItemTypes.Add("Series");
+            if(options.EnableSeasons) allowedItemTypes.Add("Season");
+            if(options.EnableSongs) allowedItemTypes.Add("Audio");
+
+
+            if (!Item.IsVirtualItem && Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) && options != null)
             {
                 queuedUpdateCheck.Add(Item.Id, 0);
             }
@@ -324,7 +334,7 @@ namespace Emby.Notifications.Discord
                     UserId = _userManager.GetInternalId(Guid.Parse(UserId))
                 }
             ).ToList().ForEach(folder => {
-                if (folder.GetItemIdList(new InternalItemsQuery { }).Contains(item.InternalId))
+                if (folder.GetItemIdList(new InternalItemsQuery { IncludeItemTypes = Constants.AllowedMediaTypes, Recursive = true }).Contains(item.InternalId))
                 {
                     isIn = true;
                 }

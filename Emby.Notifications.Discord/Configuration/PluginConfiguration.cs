@@ -30,7 +30,6 @@ namespace Emby.Notifications.Discord.Configuration
         public Boolean ExcludeExternalServerLinks { get; set; }
 
         public Boolean EnableMovies { get; set; }
-        public Boolean EnableCollections { get; set; }
         public Boolean EnableEpisodes { get; set; }
         public Boolean EnableSeries { get; set; }
         public Boolean EnableSeasons { get; set; }
