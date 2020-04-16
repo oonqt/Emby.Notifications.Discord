@@ -20,7 +20,6 @@ using MediaBrowser.Model.Library;
 using MediaBrowser.Model.IO;
 using System.IO;
 using System.Timers;
-using MediaBrowser.Controller.Providers;
 
 namespace Emby.Notifications.Discord
 {
@@ -150,6 +149,8 @@ namespace Emby.Notifications.Discord
                         if (LibraryType == "Episode")
                         {
                             titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
+                        } else if (LibraryType == "Season") {
+                            titleText = $"{item.Parent.Parent.Name} {item.Name}";
                         }
                         else
                         {
