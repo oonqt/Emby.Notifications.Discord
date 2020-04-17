@@ -29,12 +29,12 @@
                 page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
                 page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
                 
-                page.querySelector("#chkEnableMovies").checked = isEmpty(discordConfig.EnableMovies) ? true : discordConfig.EnableMovies;
-                page.querySelector("#chkEnableEpisodes").checked = isEmpty(discordConfig.EnableEpisodes) ? true : discordConfig.EnableEpisodes;
+                page.querySelector("#chkEnableMovies").checked = discordConfig.EnableMovies;
+                page.querySelector("#chkEnableEpisodes").checked = discordConfig.EnableEpisodes;
                 page.querySelector("#chkEnableSeasons").checked = discordConfig.EnableSeasons || false;
                 page.querySelector("#chkEnableSeries").checked = discordConfig.EnableSeries || false;
                 page.querySelector("#chkEnableAlbums").checked = discordConfig.EnableAlbums || false;
-                page.querySelector("#chkEnableSongs").checked = isEmpty(discordConfig.EnableSongs) ? true : discordConfig.EnableSongs;
+                page.querySelector("#chkEnableSongs").checked = discordConfig.EnableSongs;
 
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
