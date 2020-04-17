@@ -29,12 +29,12 @@
                 page.querySelector("#chkOverrideServerName").checked = isEmpty(discordConfig.ServerNameOverride) ? true : discordConfig.ServerNameOverride;
                 page.querySelector("#chkOverrideMediaAdded").checked = isEmpty(discordConfig.MediaAddedOverride) ? true : discordConfig.MediaAddedOverride;
                 
-                page.querySelector("#chkEnableMovies").checked = discordConfig.EnableMovies;
-                page.querySelector("#chkEnableEpisodes").checked = discordConfig.EnableEpisodes;
+                page.querySelector("#chkEnableMovies").checked = isEmpty(discordConfig.EnableMovies) ? true : discordConfig.EnableMovies;
+                page.querySelector("#chkEnableEpisodes").checked = isEmpty(discordConfig.EnableEpisodes) ? true : discordConfig.EnableEpisodes;
                 page.querySelector("#chkEnableSeasons").checked = discordConfig.EnableSeasons || false;
                 page.querySelector("#chkEnableSeries").checked = discordConfig.EnableSeries || false;
                 page.querySelector("#chkEnableAlbums").checked = discordConfig.EnableAlbums || false;
-                page.querySelector("#chkEnableSongs").checked = discordConfig.EnableSongs;
+                page.querySelector("#chkEnableSongs").checked = isEmpty(discordConfig.EnableSongs) ? true : discordConfig.EnableSongs;
 
                 page.querySelector("#txtDiscordWebhookUri").value = discordConfig.DiscordWebhookURI || "";
                 page.querySelector("#txtUsername").value = discordConfig.Username || "";
@@ -68,11 +68,7 @@
             }
         }
 
-        function saveConfig(e) {
-            e.preventDefault();
-
-            var page = this;
-
+        function saveConfig(page) {
             loading.show();
 
             ApiClient.getPluginConfiguration(pluginId).then(function (config) {
@@ -160,17 +156,10 @@
         }
 
         function trigger(element, type) {
-            if ('createEvent' in document) {
-                // modern browsers, IE9+
-                var e = document.createEvent('HTMLEvents');
-                e.initEvent(type, false, true);
-                element.dispatchEvent(e);
-            } else {
-                // IE 8
-                var e = document.createEventObject();
-                e.eventType = type;
-                element.fireEvent('on' + e.eventType, e);
-            }
+            // remove support for udner ie-9, not going to support a browser that people shouldnt use
+            var e = document.createEvent('HTMLEvents');
+            e.initEvent(type, false, true);
+            element.dispatchEvent(e);
         }
 
         function loadUsers(page) {
@@ -190,10 +179,25 @@
         }
 
         return function (view) {
-            view.querySelector("form").addEventListener("submit", saveConfig);
-
             view.addEventListener("viewshow", function () {
                 var page = this;
+
+                view.querySelector("form").addEventListener("submit", e => {
+                    e.preventDefault();
+    
+                    saveConfig(page)
+                });
+    
+                new MutationObserver(mutations => {
+                    mutations.forEach(mutation => {
+                        if(mutation.target.classList.contains("hide")) {
+                            saveConfig(page);
+                        }
+                    });
+                }).observe(view, { 
+                    attributes: true, 
+                    attributeFilter: ["class"] 
+                });
 
                 loadUsers(page); // load all users into select
 
