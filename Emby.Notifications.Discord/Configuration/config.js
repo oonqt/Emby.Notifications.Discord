@@ -68,7 +68,11 @@
             }
         }
 
-        function saveConfig(page) {
+        function saveConfig(e) {
+            e.preventDefault;
+
+            var page = this;
+
             loading.show();
 
             ApiClient.getPluginConfiguration(pluginId).then(function (config) {
@@ -182,22 +186,7 @@
             view.addEventListener("viewshow", function () {
                 var page = this;
 
-                view.querySelector("form").addEventListener("submit", e => {
-                    e.preventDefault();
-    
-                    saveConfig(page)
-                });
-    
-                new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        if(mutation.target.classList.contains("hide")) {
-                            saveConfig(page);
-                        }
-                    });
-                }).observe(view, { 
-                    attributes: true, 
-                    attributeFilter: ["class"] 
-                });
+                view.querySelector("form").addEventListener("submit", saveConfig);
 
                 loadUsers(page); // load all users into select
 
