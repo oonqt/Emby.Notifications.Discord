@@ -20,7 +20,6 @@ namespace Emby.Notifications.Discord.Api
 
     class NotificationsService : IService
     {
-        private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
         private readonly IServerConfigurationManager _serverConfiguration;
         private readonly IJsonSerializer _jsonSerializer;
@@ -28,7 +27,6 @@ namespace Emby.Notifications.Discord.Api
         public NotificationsService(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
-            _httpClient = new HttpClient();
             _serverConfiguration = serverConfiguration;
             _jsonSerializer = jsonSerializer;
         }
@@ -63,7 +61,7 @@ namespace Emby.Notifications.Discord.Api
             {
                 avatar_url = options.AvatarUrl,
                 username = options.Username,
-                embeds = new List<DiscordEmbed>()
+               embeds = new List<DiscordEmbed>()
                 {
                     new DiscordEmbed()
                     {
@@ -91,7 +89,7 @@ namespace Emby.Notifications.Discord.Api
             }
 
             try {
-                await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer, _httpClient);
+                await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer);
             }
             catch (System.Exception e) {
                 _logger.ErrorException("Failed to execute webhook", e);

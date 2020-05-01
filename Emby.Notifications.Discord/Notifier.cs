@@ -20,6 +20,8 @@ using MediaBrowser.Model.Library;
 using MediaBrowser.Model.IO;
 using System.IO;
 using System.Timers;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Controller.Drawing;
 
 namespace Emby.Notifications.Discord
 {
@@ -31,11 +33,9 @@ namespace Emby.Notifications.Discord
         private readonly ILibraryManager _libraryManager;
         private readonly IServerApplicationHost _applicationHost;
         private readonly ILocalizationManager _localizationManager;
-        private readonly HttpClient _httpClient;
         private readonly IUserViewManager _userViewManager;
         private readonly IUserManager _userManager;
         private readonly IFileSystem _fileSystem;
-
 
         public Dictionary<Guid, int> queuedUpdateCheck = new Dictionary<Guid, int> { };
         public Dictionary<DiscordMessage, DiscordOptions> pendingSendQueue = new Dictionary<DiscordMessage, DiscordOptions> { };
@@ -43,7 +43,6 @@ namespace Emby.Notifications.Discord
         public Notifier(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration, ILibraryManager libraryManager, IServerApplicationHost applicationHost, ILocalizationManager localizationManager, IUserViewManager userViewManager, IUserManager userManager, IFileSystem fileSystem)
         {
             _logger = logManager.GetLogger(GetType().Namespace);
-            _httpClient = new HttpClient();
             _jsonSerializer = jsonSerializer;
             _serverConfiguration = serverConfiguration;
             _libraryManager = libraryManager;
@@ -76,7 +75,7 @@ namespace Emby.Notifications.Discord
                     DiscordMessage messageToSend = pendingSendQueue.First().Key;
                     DiscordOptions options = pendingSendQueue.First().Value;
 
-                    await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer, _httpClient);
+                    await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer);
 
                     pendingSendQueue.Remove(messageToSend);
                 }   
@@ -100,192 +99,193 @@ namespace Emby.Notifications.Discord
                     BaseItem item = _libraryManager.GetItemById(itemId);
 
                     LibraryOptions itemLibraryOptions = _libraryManager.GetLibraryOptions(item);
-                    DiscordOptions options = Plugin.Instance.Configuration.Options.FirstOrDefault(opt => opt.MediaAddedOverride == true);
                     PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
                     ServerConfiguration serverConfig = _serverConfiguration.Configuration;
 
-                    if (!isInVisibleLibrary(options.MediaBrowserUserId, item))
-                    {
-                        queuedUpdateCheck.Remove(itemId);
-                        _logger.Debug("User does not have access to library, skipping...");
-                        return;
-                    }
-
-                    // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
-                    // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
-                    Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= (itemLibraryOptions.ExtractChapterImagesDuringLibraryScan ? Constants.MaxRetriesBeforeFallback * 5.5 : Constants.MaxRetriesBeforeFallback);
-
-                    if (item.ProviderIds.Count > 0 || localMetadataFallback)
-                    {
-                        _logger.Debug("{0}[{1}] has metadata, sending notification", item.Id, item.Name);
-
-                        string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
-                        string LibraryType = item.GetType().Name;
-
-                        // build primary info 
-                        DiscordMessage mediaAddedEmbed = new DiscordMessage
+                    Plugin.Instance.Configuration.Options.Where(options => options.MediaAddedOverride && options.Enabled).ToList().ForEach(options => {
+                        if (!isInVisibleLibrary(options.MediaBrowserUserId, item))
                         {
-                            username = options.Username,
-                            avatar_url = options.AvatarUrl,
-                            embeds = new List<DiscordEmbed>()
+                            queuedUpdateCheck.Remove(itemId);
+                            _logger.Debug("User does not have access to library, skipping...");
+                            return;
+                        }
+
+                        // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
+                        // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
+                        Boolean localMetadataFallback = queuedUpdateCheck[itemId] >= (itemLibraryOptions.ExtractChapterImagesDuringLibraryScan ? Constants.MaxRetriesBeforeFallback * 5.5 : Constants.MaxRetriesBeforeFallback);
+
+                        if (item.ProviderIds.Count > 0 || localMetadataFallback)
+                        {
+                            _logger.Debug("{0}[{1}] has metadata, sending notification to {2}", item.Id, item.Name, options.MediaBrowserUserId);
+
+                            string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
+                            string LibraryType = item.GetType().Name;
+
+                            // build primary info 
+                            DiscordMessage mediaAddedEmbed = new DiscordMessage
                             {
-                                new DiscordEmbed()
+                                username = options.Username,
+                                avatar_url = options.AvatarUrl,
+                                embeds = new List<DiscordEmbed>()
                                 {
-                                    color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
-                                    footer = new Footer
+                                    new DiscordEmbed()
                                     {
-                                        text = $"From {serverName}",
-                                        icon_url = options.AvatarUrl
-                                    },
-                                    timestamp = DateTime.Now
-                                }
-                            },
-                        };
+                                        color = DiscordWebhookHelper.FormatColorCode(options.EmbedColor),
+                                        footer = new Footer
+                                        {
+                                            text = $"From {serverName}",
+                                            icon_url = options.AvatarUrl
+                                        },
+                                        timestamp = DateTime.Now
+                                    }
+                                },
+                            };
 
-                        // populate title
+                            // populate title
 
-                        string titleText;
+                            string titleText;
 
-                        if (LibraryType == "Episode")
-                        {
-                            titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
-                        } else if (LibraryType == "Season") {
-                            titleText = $"{item.Parent.Name} {item.Name}";
-                        }
-                        else
-                        {
-                            titleText = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")}";
-                        }
-
-                        mediaAddedEmbed.embeds.First().title = _localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary").Replace("{0}", titleText).Replace("{1}", serverName);
-
-                        // populate description
-                        if (LibraryType == "Audio")
-                        {
-                            List<BaseItem> artists = _libraryManager.GetAllArtists(item);
-
-                            IEnumerable<string> artistsFormat = artists.Select(artist =>
+                            if (LibraryType == "Episode")
                             {
-                                if (artist.ProviderIds.Count() > 0)
-                                {
-                                    KeyValuePair<string, string> firstProvider = artist.ProviderIds.FirstOrDefault();
-
-                                    string providerUrl = firstProvider.Key == "MusicBrainzArtist" ? $"https://musicbrainz.org/artist/{firstProvider.Value}" : $"https://theaudiodb.com/artist/{firstProvider.Value}";
-
-                                    return $"[{artist.Name}]({providerUrl})";
-                                }
-                                else
-                                {
-                                    return artist.Name;
-                                }
-                            });
-
-                            if (artists.Count() > 0) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
-                        }
-                        else
-                        {
-                            if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
-                        }
-
-                        // populate title URL
-                        if (!String.IsNullOrEmpty(sysInfo.WanAddress) && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
-
-                        // populate images
-                        if (item.HasImage(ImageType.Primary))
-                        {
-                            string imageUrl = "";
-
-                            if (!item.GetImageInfo(ImageType.Primary, 0).IsLocalFile)
-                            {
-                                imageUrl = item.GetImagePath(ImageType.Primary);
-                            }
-                            else if (serverConfig.EnableRemoteAccess == true && !options.ExcludeExternalServerLinks) // in the future we can proxy images through memester server if people want to hide their server address
-                            {
-                                imageUrl = $"{sysInfo.WanAddress}/emby/Items/{itemId}/Images/Primary";
+                                titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
+                            } else if (LibraryType == "Season") {
+                                titleText = $"{item.Parent.Name} {item.Name}";
                             }
                             else
                             {
-                                string localPath = item.GetImagePath(ImageType.Primary);
-                                Stream imageData = _fileSystem.OpenRead(localPath);
-
-                                try
-                                {
-                                    imageUrl = await MemesterServiceHelper.UploadImage(imageData, _jsonSerializer, _httpClient);
-                                }
-                                catch (Exception e)
-                                {
-                                    _logger.ErrorException("Failed to proxy image", e);
-                                }
+                                titleText = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")}";
                             }
 
-                            mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
+                            mediaAddedEmbed.embeds.First().title = string.Format(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary"), titleText, serverName); //.Replace("{0}", titleText).Replace("{1}", serverName);
+
+                            // populate description
+                            if (LibraryType == "Audio")
                             {
-                                url = imageUrl
-                            };
-                        }
+                                List<BaseItem> artists = _libraryManager.GetAllArtists(item);
 
+                                IEnumerable<string> artistsFormat = artists.Select(artist =>
+                                {
+                                    if (artist.ProviderIds.Count() > 0)
+                                    {
+                                        KeyValuePair<string, string> firstProvider = artist.ProviderIds.FirstOrDefault();
 
-                        if (options.MentionType == MentionTypes.Everyone)
-                        {
-                            mediaAddedEmbed.content = "@everyone";
-                        }
-                        else if (options.MentionType == MentionTypes.Here)
-                        {
-                            mediaAddedEmbed.content = "@here";
-                        }
+                                        string providerUrl = firstProvider.Key == "MusicBrainzArtist" ? $"https://musicbrainz.org/artist/{firstProvider.Value}" : $"https://theaudiodb.com/artist/{firstProvider.Value}";
 
-                        // populate external URLs
-                        List<Field> providerFields = new List<Field>();
+                                        return $"[{artist.Name}]({providerUrl})";
+                                    }
+                                    else
+                                    {
+                                        return artist.Name;
+                                    }
+                                });
 
-                        if (!localMetadataFallback)
-                        {
-                            item.ProviderIds.ToList().ForEach(provider =>
+                                if (artists.Count() > 0) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
+                            }
+                            else
                             {
-                                Field field = new Field
-                                {
-                                    name = "External Details"
-                                };
+                                if (!String.IsNullOrEmpty(item.Overview)) mediaAddedEmbed.embeds.First().description = item.Overview;
+                            }
 
-                                Boolean didPopulate = true;
+                            // populate title URL
+                            if (!String.IsNullOrEmpty(sysInfo.WanAddress) && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
-                                switch (provider.Key.ToLower())
+                            // populate images
+                            if (item.HasImage(ImageType.Primary))
+                            {
+                                string imageUrl = "";
+
+                                if (!item.GetImageInfo(ImageType.Primary, 0).IsLocalFile)
                                 {
-                                    case "imdb":
-                                        field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
-                                        break;
-                                    case "tmdb":
-                                        field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
-                                        break;
-                                    case "musicbrainztrack":
-                                        field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
-                                        break;
-                                    case "musicbrainzalbum":
-                                        field.value = $"[MusicBrainz Album](https://musicbrainz.org/release/{provider.Value})";
-                                        break;
-                                    case "theaudiodbalbum":
-                                        field.value = $"[TADb Album](https://theaudiodb.com/album/{provider.Value})";
-                                        break;
-                                    default:
-                                        didPopulate = false;
-                                        break;
+                                    imageUrl = item.GetImagePath(ImageType.Primary);
+                                }
+                                else if (serverConfig.EnableRemoteAccess == true && !options.ExcludeExternalServerLinks) // in the future we can proxy images through memester server if people want to hide their server address
+                                {
+                                    imageUrl = $"{sysInfo.WanAddress}/emby/Items/{itemId}/Images/Primary";
+                                }
+                                else
+                                {
+                                    string localPath = item.GetImagePath(ImageType.Primary);
+
+                                    try
+                                    {
+                                        ImageServiceResponse response = MemesterServiceHelper.UploadImage(localPath, _jsonSerializer);
+                                        imageUrl = response.filePath;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        _logger.ErrorException("Failed to proxy image", e);
+                                    }
                                 }
 
-                                if (didPopulate == true) providerFields.Add(field);
-                            });
+                                mediaAddedEmbed.embeds.First().thumbnail = new Thumbnail
+                                {
+                                    url = imageUrl
+                                };
+                            }
 
-                            if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
+
+                            if (options.MentionType == MentionTypes.Everyone)
+                            {
+                                mediaAddedEmbed.content = "@everyone";
+                            }
+                            else if (options.MentionType == MentionTypes.Here)
+                            {
+                                mediaAddedEmbed.content = "@here";
+                            }
+
+                            // populate external URLs
+                            List<Field> providerFields = new List<Field>();
+
+                            if (!localMetadataFallback)
+                            {
+                                item.ProviderIds.ToList().ForEach(provider =>
+                                {
+                                    Field field = new Field
+                                    {
+                                        name = "External Details"
+                                    };
+
+                                    Boolean didPopulate = true;
+
+                                    switch (provider.Key.ToLower())
+                                    {
+                                        case "imdb":
+                                            field.value = $"[IMDb](https://www.imdb.com/title/{provider.Value}/)";
+                                            break;
+                                        case "tmdb":
+                                            field.value = $"[TMDb](https://www.themoviedb.org/{(LibraryType == "Movie" ? "movie" : "tv")}/{provider.Value})";
+                                            break;
+                                        case "musicbrainztrack":
+                                            field.value = $"[MusicBrainz Track](https://musicbrainz.org/track/{provider.Value})";
+                                            break;
+                                        case "musicbrainzalbum":
+                                            field.value = $"[MusicBrainz Album](https://musicbrainz.org/release/{provider.Value})";
+                                            break;
+                                        case "theaudiodbalbum":
+                                            field.value = $"[TADb Album](https://theaudiodb.com/album/{provider.Value})";
+                                            break;
+                                        default:
+                                            didPopulate = false;
+                                            break;
+                                    }
+
+                                    if (didPopulate == true) providerFields.Add(field);
+                                });
+
+                                if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
+                            }
+
+                            pendingSendQueue.Add(mediaAddedEmbed, options);
+
+                            queuedUpdateCheck.Remove(itemId);
                         }
+                        else
+                        {
+                            queuedUpdateCheck[itemId]++;
 
-                        pendingSendQueue.Add(mediaAddedEmbed, options);
-
-                        queuedUpdateCheck.Remove(itemId);
-                    }
-                    else
-                    {
-                        queuedUpdateCheck[itemId]++;
-
-                        _logger.Debug("Attempt: {0}", queuedUpdateCheck[itemId]);
-                    }
+                            _logger.Debug("Attempt: {0}", queuedUpdateCheck[itemId]);
+                        }
+                    });
                 });
             }
             catch (Exception e)
@@ -295,12 +295,6 @@ namespace Emby.Notifications.Discord
         }
 
         // in js i'd just do a slice(-2) but i couldnt find a cs equiv
-
-        private class MemesterServiceResponse
-        {
-            public string filePath { get; set; }
-        }
-
         private string formatIndex(int? number) => number < 10 ? $"0{number}" : number.ToString();
 
         private void ItemAddHandler(object sender, ItemChangeEventArgs changeEvent)
@@ -414,9 +408,6 @@ namespace Emby.Notifications.Discord
                     }
 
                     pendingSendQueue.Add(discordMessage, options);
-
-                    _logger.Debug("Pending queue count second: {0}", pendingSendQueue.Count());
-
                 }
             });
         }

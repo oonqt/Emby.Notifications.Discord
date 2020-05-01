@@ -2,9 +2,11 @@
 using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Text;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
 
 namespace Emby.Notifications.Discord
 {
@@ -53,27 +55,29 @@ namespace Emby.Notifications.Discord
             return int.Parse(hexCode.Substring(1, 6), System.Globalization.NumberStyles.HexNumber);
         }
 
-        public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer, HttpClient _httpClient)
+        public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer)
         {
-            StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
+            //StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
 
             try
             {
-                HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, webhookUrl);
-                req.Content = postData;
-                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                byte[] bytes = Encoding.UTF8.GetBytes(_jsonSerializer.SerializeToString(message));
 
-                HttpResponseMessage response = await _httpClient.SendAsync(req).ConfigureAwait(false);
-
-                string content = await response.Content.ReadAsStringAsync();
-
-                if(response.StatusCode != HttpStatusCode.NoContent) {
-                    throw new System.Exception($"Status: {response.StatusCode} content: {content}");
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(webhookUrl);
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                request.ContentLength = bytes.Length;
+                using (Stream requestData = request.GetRequestStream())
+                {
+                    requestData.Write(bytes, 0, bytes.Count());
                 }
-            }
-            catch (HttpRequestException e)
+
+                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
+
+                response.Dispose();
+            } catch (Exception e)
             {
-                throw new System.Exception(e.Message);
+                throw e;
             }
         }
     }
