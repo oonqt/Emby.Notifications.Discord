@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.Serialization;
 using System.Net.Http;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Net;
 
 namespace Emby.Notifications.Discord.Api
 {
     [Route("/Notifications/Discord/Test/{UserID}", "POST", Summary = "Tests Discord")]
+    [Authenticated(Roles = "Admin")]
     public class TestNotification : IReturnVoid
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
