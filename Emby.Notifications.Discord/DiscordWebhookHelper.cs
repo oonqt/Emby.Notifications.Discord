@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using System.Text;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -57,8 +56,6 @@ namespace Emby.Notifications.Discord
 
         public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer)
         {
-            //StringContent postData = new StringContent(_jsonSerializer.SerializeToString(message).ToString());
-
             try
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(_jsonSerializer.SerializeToString(message));

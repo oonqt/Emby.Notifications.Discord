@@ -1,5 +1,4 @@
 using System.Net;
-using System.Threading.Tasks;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Text;
