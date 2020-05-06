@@ -63,7 +63,9 @@ namespace Emby.Notifications.Discord
 
         public void Dispose() {
             _libraryManager.ItemAdded -= ItemAddHandler;
+            QueuedMessageHandler.Stop();
             QueuedMessageHandler.Dispose();
+            QueuedUpdateHandler.Stop();
             QueuedUpdateHandler.Dispose();
         }
 
@@ -163,7 +165,7 @@ namespace Emby.Notifications.Discord
                             titleText = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")}";
                         }
 
-                        mediaAddedEmbed.embeds.First().title = $"{titleText} has been added to {serverName}"; //string.Format(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary"), titleText, serverName); //.Replace("{0}", titleText).Replace("{1}", serverName);
+                        mediaAddedEmbed.embeds.First().title = $"{titleText} has been added to {serverName.Trim()}"; //string.Format(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary"), titleText, serverName); //.Replace("{0}", titleText).Replace("{1}", serverName);
 
                         // populate description
                         if (LibraryType == "Audio")
@@ -313,7 +315,7 @@ namespace Emby.Notifications.Discord
                 if(options.EnableSeasons) allowedItemTypes.Add("Season");
                 if(options.EnableSongs) allowedItemTypes.Add("Audio");
 
-                if (Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) && options != null && options.Enabled == true && options.MediaAddedOverride == true)
+                if (!Item.IsVirtualItem && Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) && options != null && options.Enabled == true && options.MediaAddedOverride == true)
                 {
                     queuedUpdateCheck.Add(Guid.NewGuid(), new QueuedUpdateData { Retries = 0, Configuration = options, ItemId = Item.Id });
                 }
