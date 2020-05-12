@@ -18,6 +18,8 @@ using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Library;
 using System.Timers;
 
+// FUTURE: once we get the quirks worked out, we will remove the need for emby's built in notification system because it sucks and implement little modules for each notification (media added, plugin update, etc)
+
 namespace Emby.Notifications.Discord
 {
     public class Notifier : INotificationService, IDisposable
@@ -75,12 +77,12 @@ namespace Emby.Notifications.Discord
             {
                 if (pendingSendQueue.Count > 0)
                 {
-                    DiscordMessage messageToSend = pendingSendQueue.First().Key;
+                    DiscordMessage message = pendingSendQueue.First().Key;
                     DiscordOptions options = pendingSendQueue.First().Value;
 
-                    await DiscordWebhookHelper.ExecuteWebhook(messageToSend, options.DiscordWebhookURI, _jsonSerializer);
+                    await DiscordWebhookHelper.ExecuteWebhook(message, options.DiscordWebhookURI, _jsonSerializer);
 
-                    pendingSendQueue.Remove(messageToSend);
+                    if(pendingSendQueue.ContainsKey(message)) pendingSendQueue.Remove(message);
                 }   
             }
             catch(Exception e)
@@ -98,6 +100,7 @@ namespace Emby.Notifications.Discord
 
                 queuedUpdateCheck.ToList().ForEach(async queuedItem =>
                 {
+                    DiscordOptions options = queuedItem.Value.Configuration;
                     Guid itemId = queuedItem.Value.ItemId;
 
                     _logger.Debug("{0} queued for recheck", itemId.ToString());
@@ -107,15 +110,9 @@ namespace Emby.Notifications.Discord
                     LibraryOptions itemLibraryOptions = _libraryManager.GetLibraryOptions(item);
                     PublicSystemInfo sysInfo = await _applicationHost.GetPublicSystemInfo(CancellationToken.None);
                     ServerConfiguration serverConfig = _serverConfiguration.Configuration;
-                    DiscordOptions options = queuedItem.Value.Configuration;
 
-                    _logger.Debug("Options: {0} enabled: {1}", options.DiscordWebhookURI, options.Enabled);
-
-                    if (!isInVisibleLibrary(options.MediaBrowserUserId, item))
-                    {
-                        _logger.Debug("User does not have access to library, skipping...");
-                        return;
-                    }
+                    string LibraryType = item.GetType().Name;
+                    string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
 
                     // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
                     // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
@@ -123,12 +120,9 @@ namespace Emby.Notifications.Discord
 
                     if (item.ProviderIds.Count > 0 || localMetadataFallback)
                     {
-                        _logger.Debug("{0}[{1}] has metadata, sending notification to {2}", item.Id, item.Name, options.MediaBrowserUserId);
+                        _logger.Debug("{0}[{1}] has metadata (Local fallback: {2}), sending notification to {3}", item.Id, item.Name, localMetadataFallback, options.MediaBrowserUserId);
 
-                        queuedUpdateCheck.Remove(queuedItem.Key); // remove it beforehand because if some operation takes any longer amount of time it might allow enough time for another notification to slip through
-
-                        string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
-                        string LibraryType = item.GetType().Name;
+                        if(queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck.Remove(queuedItem.Key); // remove it beforehand because if some operation takes any longer amount of time it might allow enough time for another notification to slip through
 
                         // build primary info 
                         DiscordMessage mediaAddedEmbed = new DiscordMessage
@@ -156,16 +150,16 @@ namespace Emby.Notifications.Discord
 
                         if (LibraryType == "Episode")
                         {
-                            titleText = $"{item.Parent.Parent.Name} {(item.ParentIndexNumber != null ? $"S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber != null ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
+                            titleText = $"{item.Parent.Parent.Name}{(item.ParentIndexNumber.HasValue ? $" S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber.HasValue ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
                         } else if (LibraryType == "Season") {
                             titleText = $"{item.Parent.Name} {item.Name}";
                         }
                         else
                         {
-                            titleText = $"{item.Name} {(!String.IsNullOrEmpty(item.ProductionYear.ToString()) ? $"({item.ProductionYear.ToString()})" : "")}";
+                            titleText = $"{item.Name}{(item.ProductionYear.HasValue ? $" ({item.ProductionYear.ToString()})" : "")}";
                         }
 
-                        mediaAddedEmbed.embeds.First().title = $"{titleText} has been added to {serverName.Trim()}"; //string.Format(_localizationManager.GetLocalizedString("ValueHasBeenAddedToLibrary"), titleText, serverName); //.Replace("{0}", titleText).Replace("{1}", serverName);
+                        mediaAddedEmbed.embeds.First().title = $"{titleText} has been added to {serverName.Trim()}";
 
                         // populate description
                         if (LibraryType == "Audio")
@@ -174,18 +168,20 @@ namespace Emby.Notifications.Discord
 
                             IEnumerable<string> artistsFormat = artists.Select(artist =>
                             {
+                                string formattedArtist = artist.Name;
+
                                 if (artist.ProviderIds.Count() > 0)
                                 {
                                     KeyValuePair<string, string> firstProvider = artist.ProviderIds.FirstOrDefault();
 
                                     string providerUrl = firstProvider.Key == "MusicBrainzArtist" ? $"https://musicbrainz.org/artist/{firstProvider.Value}" : $"https://theaudiodb.com/artist/{firstProvider.Value}";
 
-                                    return $"[{artist.Name}]({providerUrl})";
+                                    formattedArtist += $" [(Music Brainz)]({providerUrl})";
                                 }
-                                else
-                                {
-                                    return artist.Name;
-                                }
+
+                                if(serverConfig.EnableRemoteAccess && !options.ExcludeExternalServerLinks) formattedArtist += $" [(Emby)]({sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={artist.InternalId})";
+
+                                return formattedArtist;
                             });
 
                             if (artists.Count() > 0) mediaAddedEmbed.embeds.First().description = $"By {string.Join(", ", artistsFormat)}";
@@ -196,7 +192,7 @@ namespace Emby.Notifications.Discord
                         }
 
                         // populate title URL
-                        if (!String.IsNullOrEmpty(sysInfo.WanAddress) && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
+                        if (serverConfig.EnableRemoteAccess && !options.ExcludeExternalServerLinks) mediaAddedEmbed.embeds.First().url = $"{sysInfo.WanAddress}/web/index.html#!/item?id={itemId}&serverId={sysInfo.Id}";
 
                         // populate images
                         if (item.HasImage(ImageType.Primary))
@@ -251,7 +247,7 @@ namespace Emby.Notifications.Discord
                             {
                                 Field field = new Field
                                 {
-                                    name = "External Details"
+                                    name = "External Links"
                                 };
 
                                 Boolean didPopulate = true;
@@ -288,7 +284,7 @@ namespace Emby.Notifications.Discord
                     }
                     else
                     {
-                        queuedUpdateCheck[queuedItem.Key].Retries++;
+                        if(queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck[queuedItem.Key].Retries++;
                     }
                 });
             }
@@ -315,7 +311,14 @@ namespace Emby.Notifications.Discord
                 if(options.EnableSeasons) allowedItemTypes.Add("Season");
                 if(options.EnableSongs) allowedItemTypes.Add("Audio");
 
-                if (!Item.IsVirtualItem && Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) && options != null && options.Enabled == true && options.MediaAddedOverride == true)
+                if (
+                    !Item.IsVirtualItem 
+                    && Array.Exists(allowedItemTypes.ToArray(), t => t == LibraryType) 
+                    && options != null 
+                    && options.Enabled == true 
+                    && options.MediaAddedOverride == true
+                    && isInVisibleLibrary(options.MediaBrowserUserId, Item)
+                )
                 {
                     queuedUpdateCheck.Add(Guid.NewGuid(), new QueuedUpdateData { Retries = 0, Configuration = options, ItemId = Item.Id });
                 }
@@ -351,7 +354,7 @@ namespace Emby.Notifications.Discord
         {
             DiscordOptions options = GetOptions(user);
 
-            return options != null && !string.IsNullOrEmpty(options.DiscordWebhookURI) && options.Enabled;
+            return options != null && options.Enabled;
         }
 
         private DiscordOptions GetOptions(User user)
