@@ -1,5 +1,7 @@
 # Emby notifications for Discord
 
+This plugin has a handful of unaddressed feature requests and issues, I'll hopefully be able to rewrite this soon. 
+
 ### [Forum Thread](https://emby.media/community/index.php?/topic/82370-new-plugin-discord-notifications/)
 
 ### Configuration
