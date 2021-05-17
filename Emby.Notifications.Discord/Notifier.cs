@@ -116,6 +116,9 @@ namespace Emby.Notifications.Discord
                         string LibraryType = item.GetType().Name;
                         string serverName = options.ServerNameOverride ? serverConfig.ServerName : "Emby Server";
 
+                        if (string.IsNullOrEmpty(serverName))
+                            serverName = "Emby Server";
+
                         // for whatever reason if you have extraction on during library scans then it waits for the extraction to finish before populating the metadata.... I don't get why the fuck it goes in that order
                         // its basically impossible to make a prediction on how long it could take as its dependent on the bitrate, duration, codec, and processing power of the system
                         Boolean localMetadataFallback = queuedUpdateCheck[queuedItem.Key].Retries >= (itemLibraryOptions.ExtractChapterImagesDuringLibraryScan ? Constants.MaxRetriesBeforeFallback * 5.5 : Constants.MaxRetriesBeforeFallback);
@@ -124,7 +127,7 @@ namespace Emby.Notifications.Discord
                         {
                             _logger.Debug("{0}[{1}] has metadata (Local fallback: {2}), adding to queue", item.Id, item.Name, localMetadataFallback, options.MediaBrowserUserId);
 
-                            if(queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck.Remove(queuedItem.Key); // remove it beforehand because if some operation takes any longer amount of time it might allow enough time for another notification to slip through
+                            if (queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck.Remove(queuedItem.Key); // remove it beforehand because if some operation takes any longer amount of time it might allow enough time for another notification to slip through
 
                             // build primary info 
                             DiscordMessage mediaAddedEmbed = new DiscordMessage
@@ -147,12 +150,11 @@ namespace Emby.Notifications.Discord
                             };
 
                             // populate title
-
                             string titleText;
-
                             if (LibraryType == "Episode")
                             {
-                                titleText = $"{item.Parent.Parent.Name}{(item.ParentIndexNumber.HasValue ? $" S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber.HasValue ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
+                               titleText = $"{item.Parent.Parent.Name}{(item.ParentIndexNumber.HasValue ? $" S{formatIndex(item.ParentIndexNumber)}" : "")}{(item.IndexNumber.HasValue ? $"E{formatIndex(item.IndexNumber)}" : "")} {item.Name}";
+
                             } else if (LibraryType == "Season") {
                                 titleText = $"{item.Parent.Name} {item.Name}";
                             }
@@ -230,7 +232,6 @@ namespace Emby.Notifications.Discord
                                 };
                             }
 
-
                             if (options.MentionType == MentionTypes.Everyone)
                             {
                                 mediaAddedEmbed.content = "@everyone";
@@ -253,7 +254,6 @@ namespace Emby.Notifications.Discord
                                     };
 
                                     Boolean didPopulate = true;
-
                                     switch (provider.Key.ToLower())
                                     {
                                         case "imdb":
@@ -277,16 +277,16 @@ namespace Emby.Notifications.Discord
                                     }
 
                                     if (didPopulate == true) providerFields.Add(field);
-                                });
+                               });
 
-                                if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
+                                 if (providerFields.Count() > 0) mediaAddedEmbed.embeds.First().fields = providerFields;
                             }
 
                             pendingSendQueue.Add(mediaAddedEmbed, options);
-                        }
+                         }
                         else
                         {
-                            if(queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck[queuedItem.Key].Retries++;
+                            if (queuedUpdateCheck.ContainsKey(queuedItem.Key)) queuedUpdateCheck[queuedItem.Key].Retries++;
                         }
                     }
                 });
@@ -338,17 +338,25 @@ namespace Emby.Notifications.Discord
         {
             Boolean isIn = false;
 
-            _userViewManager.GetUserViews(
-                new UserViewQuery
+            try
+            {
+                _userViewManager.GetUserViews(
+                    new UserViewQuery
+                    {
+                        UserId = _userManager.GetInternalId(Guid.Parse(UserId))
+                    }
+                ).ToList().ForEach(folder =>
                 {
-                    UserId = _userManager.GetInternalId(Guid.Parse(UserId))
-                }
-            ).ToList().ForEach(folder => {
-                if (folder.GetItemIdList(new InternalItemsQuery { IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Episode", "Series", "Season", "Audio" }, Recursive = true }).Contains(item.InternalId))
-                {
-                    isIn = true;
-                }
-            });
+                    if (folder.GetItemIdList(new InternalItemsQuery { IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Episode", "Series", "Season", "Audio" }, Recursive = true }).Contains(item.InternalId))
+                    {
+                        isIn = true;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.ErrorException("Something unexpected happened in isInVisibleLibrary (Potentially options.MediaBrowserUserId is null). UserID = " + UserId, ex);
+            }
 
             return isIn;
         }
