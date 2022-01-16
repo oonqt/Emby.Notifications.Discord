@@ -1,10 +1,12 @@
-﻿<div data-role="page" id="discordConfigurationPage" class="page type-interior pluginConfigurationPage fullWidthContent" data-controller="__plugin/DiscordNotificationsJS">
+﻿<div class="page type-interior pluginConfigurationPage fullWidthContent" data-controller="__plugin/DiscordNotificationsJS" data-role="page"
+     id="discordConfigurationPage">
     <div>
         <div class="content-primary">
             <div class="verticalSection">
                 <div class="sectionTitleContainer">
                     <h2 class="sectionTitle">Discord ${HeaderNotifications}</h2>
-                    <a is="emby-linkbutton" class="raised raised-mini" style="margin-left: 2em;" target="_blank" href="https://github.com/oonqt/Emby.Notifications.Discord/blob/master/README.md">
+                    <a class="raised raised-mini" href="https://github.com/oonqt/Emby.Notifications.Discord/blob/master/README.md" is="emby-linkbutton" style="margin-left: 2em;"
+                       target="_blank">
                         <i class="md-icon button-icon button-icon-left secondaryText">help</i>
                         <span>${Help}</span>
                     </a>
@@ -13,63 +15,64 @@
 
             <form class="discordConfigurationForm">
                 <div class="selectContainer">
-                    <select is="emby-select" id="selectUser" label="${LabelConfigureNotificationsFor}:"></select>
+                    <select id="selectUser" is="emby-select" label="${LabelConfigureNotificationsFor}:"></select>
                 </div>
                 <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="chkEnableDiscord" />
+                    <input id="chkEnableDiscord" is="emby-checkbox" type="checkbox"/>
                     <span>${LabelEnabled}</span>
                 </label>
                 <div class="inputContainer">
-                    <input is="emby-input" type="text" id="txtDiscordWebhookUri" required="required" label="* ${LabelDiscordWebhookUrl}:" />
+                    <input id="txtDiscordWebhookUri" is="emby-input" label="* ${LabelDiscordWebhookUrl}:" required="required"
+                           type="text"/>
                 </div>
                 <div class="inputContainer">
-                    <input is="emby-input" type="text" id="txtAvatarUrl" label="${LabelAvatarUrl}:" />
+                    <input id="txtAvatarUrl" is="emby-input" label="${LabelAvatarUrl}:" type="text"/>
                 </div>
                 <div class="inputContainer">
-                    <input is="emby-input" type="text" id="txtUsername" label="${LabelWebhookUsername}:" />
+                    <input id="txtUsername" is="emby-input" label="${LabelWebhookUsername}:" type="text"/>
                 </div>
                 <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="chkOverrideServerName" />
+                    <input id="chkOverrideServerName" is="emby-checkbox" type="checkbox"/>
                     <span>${LabelServerNameOverride}</span>
                 </label>
                 <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="chkOverrideMediaAdded" />
+                    <input id="chkOverrideMediaAdded" is="emby-checkbox" type="checkbox"/>
                     <span>${LabelOverrideMediaAdded}</span>
                 </label>
 
-                <div id="notificationTypeGroup" style="padding-left: 35px;" hidden>
+                <div hidden id="notificationTypeGroup" style="padding-left: 35px;">
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableMovies" />
+                        <input id="chkEnableMovies" is="emby-checkbox" type="checkbox"/>
                         <span>${HeaderMovies}</span>
                     </label>
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableEpisodes" />
+                        <input id="chkEnableEpisodes" is="emby-checkbox" type="checkbox"/>
                         <span>${HeaderEpisodes}</span>
                     </label>
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableSeasons" />
+                        <input id="chkEnableSeasons" is="emby-checkbox" type="checkbox"/>
                         <span>${HeaderSeason}</span>
                     </label>
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableSeries" />
+                        <input id="chkEnableSeries" is="emby-checkbox" type="checkbox"/>
                         <span>${HeaderSeries}</span>
                     </label>
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableAlbums" />
+                        <input id="chkEnableAlbums" is="emby-checkbox" type="checkbox"/>
                         <span>${HeaderAlbums}</span>
                     </label>
                     <label class="checkboxContainer">
-                        <input is="emby-checkbox" type="checkbox" id="chkEnableSongs" />
+                        <input id="chkEnableSongs" is="emby-checkbox" type="checkbox"/>
                         <span>${Songs}</span>
                     </label>
                 </div>
 
                 <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="chkExcludeExternalServerLinks" />
+                    <input id="chkExcludeExternalServerLinks" is="emby-checkbox" type="checkbox"/>
                     <span>${LabelHideExternalLinks}</span>
                 </label>
                 <div class="selectContainer">
-                    <select is="emby-select" id="mentionType" label="${LabelMentionType}:">
+                    <select id="mentionType" is="emby-select" label="${LabelMentionType}:">
                         <option value="Everyone">@everyone</option>
                         <option value="Here">@here</option>
                         <option value="None">None</option>
@@ -77,16 +80,16 @@
                 </div>
                 <div class="inputContainer">
                     <label for="embedColor">${LabelEmbedColor}</label>
-                    <input type="color" id="embedColor" is="emby-input" style="height: 2.2em;" />
-                    <input type="text" is="emby-input" id="txtEmbedColor" />
+                    <input id="embedColor" is="emby-input" style="height: 2.2em;" type="color"/>
+                    <input id="txtEmbedColor" is="emby-input" type="text"/>
                 </div>
                 <div>
-                    <button is="emby-button" type="button" class="raised button-cancel block" id="btnTestNotification">
+                    <button class="raised button-cancel block" id="btnTestNotification" is="emby-button" type="button">
                         <span>${LabelSendTestNotification}</span>
                     </button>
                 </div>
-                <br />
-                <button is="emby-button" type="submit" class="raised button-submit block">
+                <br/>
+                <button class="raised button-submit block" is="emby-button" type="submit">
                     <span>${Save}</span>
                 </button>
             </form>
@@ -94,12 +97,12 @@
     </div>
 
     <style> /* should go in head, but pluginmanager doesnt load the head */
-        .checkboxContainer {
-            max-width: fit-content;
-        }
+    .checkboxContainer {
+        max-width: fit-content;
+    }
 
-        #embedColor:hover {
-            cursor: pointer;
-        }
+    #embedColor:hover {
+        cursor: pointer;
+    }
     </style>
 </div>

@@ -1,11 +1,11 @@
 ﻿using System;
-using MediaBrowser.Model.Serialization;
 using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-using System.Text;
-using System.IO;
+using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using MediaBrowser.Model.Serialization;
 
 namespace Emby.Notifications.Discord
 {
@@ -30,7 +30,7 @@ namespace Emby.Notifications.Discord
     {
         public string name { get; set; }
         public string value { get; set; }
-        public Boolean inline { get; set; }
+        public bool inline { get; set; }
     }
 
     public class Footer
@@ -51,28 +51,29 @@ namespace Emby.Notifications.Discord
     {
         public static int FormatColorCode(string hexCode)
         {
-            return int.Parse(hexCode.Substring(1, 6), System.Globalization.NumberStyles.HexNumber);
+            return int.Parse(hexCode.Substring(1, 6), NumberStyles.HexNumber);
         }
 
         public static async Task ExecuteWebhook(DiscordMessage message, string webhookUrl, IJsonSerializer _jsonSerializer)
         {
             try
             {
-                byte[] bytes = Encoding.UTF8.GetBytes(_jsonSerializer.SerializeToString(message));
+                var bytes = Encoding.UTF8.GetBytes(_jsonSerializer.SerializeToString(message));
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(webhookUrl);
+                var request = (HttpWebRequest) WebRequest.Create(webhookUrl);
                 request.Method = "POST";
                 request.ContentType = "application/json";
                 request.ContentLength = bytes.Length;
-                using (Stream requestData = request.GetRequestStream())
+                using (var requestData = request.GetRequestStream())
                 {
                     requestData.Write(bytes, 0, bytes.Count());
                 }
 
-                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
+                var response = (HttpWebResponse) await request.GetResponseAsync();
 
                 response.Dispose();
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw e;
             }
