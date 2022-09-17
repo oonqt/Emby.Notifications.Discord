@@ -1,6 +1,6 @@
 ﻿namespace Emby.Notifications.Discord
 {
-    class Constants
+    internal class Constants
     {
         public static readonly int RecheckIntervalMS = 10000;
         public static readonly int MaxRetriesBeforeFallback = 10;

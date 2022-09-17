@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using MediaBrowser.Model.Plugins;
+﻿using MediaBrowser.Model.Plugins;
 
 namespace Emby.Notifications.Discord.Configuration
 {
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public DiscordOptions[] Options { get; set; }
-
         public PluginConfiguration()
         {
             Options = new DiscordOptions[] { };
         }
+
+        public DiscordOptions[] Options { get; set; }
     }
 
     public enum MentionTypes
@@ -24,22 +22,22 @@ namespace Emby.Notifications.Discord.Configuration
     public class DiscordOptions
     {
         public string MediaBrowserUserId { get; set; }
-        public Boolean Enabled { get; set; }
-        public Boolean ServerNameOverride { get; set; }
-        public Boolean MediaAddedOverride { get; set; }
-        public Boolean ExcludeExternalServerLinks { get; set; }
+        public bool Enabled { get; set; }
+        public bool ServerNameOverride { get; set; }
+        public bool MediaAddedOverride { get; set; }
+        public bool ExcludeExternalServerLinks { get; set; }
 
-        public Boolean EnableMovies { get; set; }
-        public Boolean EnableEpisodes { get; set; }
-        public Boolean EnableSeries { get; set; }
-        public Boolean EnableSeasons { get; set; }
-        public Boolean EnableAlbums { get; set; }
-        public Boolean EnableSongs { get; set; }
+        public bool EnableMovies { get; set; }
+        public bool EnableEpisodes { get; set; }
+        public bool EnableSeries { get; set; }
+        public bool EnableSeasons { get; set; }
+        public bool EnableAlbums { get; set; }
+        public bool EnableSongs { get; set; }
 
-        public String EmbedColor { get; set; }
-        public String AvatarUrl { get; set; }
-        public String Username { get; set; }
-        public String DiscordWebhookURI { get; set; }
+        public string EmbedColor { get; set; }
+        public string AvatarUrl { get; set; }
+        public string Username { get; set; }
+        public string DiscordWebhookURI { get; set; }
         public MentionTypes MentionType { get; set; }
     }
 }

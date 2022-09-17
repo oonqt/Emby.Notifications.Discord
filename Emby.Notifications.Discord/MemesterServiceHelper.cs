@@ -1,7 +1,7 @@
-using System.Net;
-using MediaBrowser.Model.Serialization;
 using System;
+using System.Net;
 using System.Text;
+using MediaBrowser.Model.Serialization;
 
 namespace Emby.Notifications.Discord
 {
@@ -10,18 +10,21 @@ namespace Emby.Notifications.Discord
         public string filePath { get; set; }
     }
 
-    public class MemesterServiceHelper {
+    public class MemesterServiceHelper
+    {
         private static string uploadEndpoint => "https://i.memester.xyz/upload?format=json";
 
-        public static ImageServiceResponse UploadImage(string path, IJsonSerializer jsonSerializer) {
+        public static ImageServiceResponse UploadImage(string path, IJsonSerializer jsonSerializer)
+        {
             try
             {
-                WebClient client = new WebClient();
+                var client = new WebClient();
 
-                byte[] response = client.UploadFile(uploadEndpoint, path);
+                var response = client.UploadFile(uploadEndpoint, path);
 
                 return jsonSerializer.DeserializeFromString<ImageServiceResponse>(Encoding.Default.GetString(response));
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw e;
             }

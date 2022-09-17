@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Services;
-using Emby.Notifications.Discord.Configuration;
 using System.Threading.Tasks;
-using MediaBrowser.Model.Serialization;
-using System.Net.Http;
+using Emby.Notifications.Discord.Configuration;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Net;
+using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.Services;
 
 namespace Emby.Notifications.Discord.Api
 {
@@ -20,11 +20,11 @@ namespace Emby.Notifications.Discord.Api
         public string UserID { get; set; }
     }
 
-    class NotificationsService : IService
+    internal class NotificationsService : IService
     {
+        private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
         private readonly IServerConfigurationManager _serverConfiguration;
-        private readonly IJsonSerializer _jsonSerializer;
 
         public NotificationsService(ILogManager logManager, IJsonSerializer jsonSerializer, IServerConfigurationManager serverConfiguration)
         {
@@ -32,7 +32,8 @@ namespace Emby.Notifications.Discord.Api
             _serverConfiguration = serverConfiguration;
             _jsonSerializer = jsonSerializer;
         }
-        private DiscordOptions GetOptions(String userID)
+
+        private DiscordOptions GetOptions(string userID)
         {
             return Plugin.Instance.Configuration.Options
                 .FirstOrDefault(i => string.Equals(i.MediaBrowserUserId, userID, StringComparison.OrdinalIgnoreCase));
@@ -40,34 +41,30 @@ namespace Emby.Notifications.Discord.Api
 
         public void Post(TestNotification request)
         {
-            Task task = PostAsync(request);
+            var task = PostAsync(request);
             Task.WaitAll(task);
         }
 
         public async Task PostAsync(TestNotification request)
         {
-            DiscordOptions options = GetOptions(request.UserID);
+            var options = GetOptions(request.UserID);
 
             string footerText;
 
             if (options.ServerNameOverride)
-            {
                 footerText = $"From {_serverConfiguration.Configuration.ServerName}";
-            }
             else
-            {
                 footerText = "From Emby Server";
-            }
 
-            DiscordMessage discordMessage = new DiscordMessage()
+            var discordMessage = new DiscordMessage
             {
                 avatar_url = options.AvatarUrl,
                 username = options.Username,
-               embeds = new List<DiscordEmbed>()
+                embeds = new List<DiscordEmbed>
                 {
-                    new DiscordEmbed()
+                    new DiscordEmbed
                     {
-                        color = int.Parse(options.EmbedColor.Substring(1, 6), System.Globalization.NumberStyles.HexNumber),
+                        color = int.Parse(options.EmbedColor.Substring(1, 6), NumberStyles.HexNumber),
                         description = "This is a test notification from Emby",
                         title = "It worked!",
                         footer = new Footer
@@ -90,13 +87,15 @@ namespace Emby.Notifications.Discord.Api
                     break;
             }
 
-            try {
+            try
+            {
                 await DiscordWebhookHelper.ExecuteWebhook(discordMessage, options.DiscordWebhookURI, _jsonSerializer);
             }
-            catch (System.Exception e) {
+            catch (Exception e)
+            {
                 _logger.ErrorException("Failed to execute webhook", e);
                 throw new ArgumentException();
             }
-        } 
+        }
     }
 }
